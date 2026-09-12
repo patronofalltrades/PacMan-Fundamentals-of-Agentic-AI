@@ -7,13 +7,23 @@ This repository is the single deliverable. It holds the executed notebook, the e
 from one training run, and the explanation. Read this README alone to understand what ran,
 what the agent learned, and how to reproduce it.
 
-**Notebook:** [pacman_dqn.ipynb](pacman_dqn.ipynb) — saved with all outputs from the final run.
+## ▶ Read the executed notebook here
+
+### **[Open pacman_dqn.ipynb in nbviewer](https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb)**
+
+The notebook is [`pacman_dqn.ipynb`](pacman_dqn.ipynb) in this repository, saved with every
+output from the final run. **GitHub shows it as a blank page.** The file is 14.6 MB, because
+the training cell holds 305 embedded gameplay GIFs, and GitHub's notebook viewer gives up at
+that size. The link above renders the same file in full: the five before and after scores,
+the training dashboard, and the gameplay.
+
+The outputs have not been cleared. The file is exactly as the run saved it.
 
 ## About this repository
 
 | Path | What it holds |
 |---|---|
-| `pacman_dqn.ipynb` | The executed notebook, saved with all outputs from this run |
+| `pacman_dqn.ipynb` | The executed notebook, saved with all outputs from this run. 14.6 MB, so read it [in nbviewer](https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb) — GitHub cannot render it |
 | `results/comparison.json` | Five before scores and five after scores, on seeds 101, 202, 303, 404, 505 |
 | `results/training_dashboard.png` | Score, loss, and exploration curves |
 | `results/demos/` | 307 GIFs: the untrained game, 305 demonstrations, and the best trained game |
@@ -256,6 +266,8 @@ evaluation runs.
 
 A longer analysis, including why the loss never fell and why the machine mattered more than
 the settings, is in [FINDINGS.md](FINDINGS.md).
+
+Executed notebook: **[open in nbviewer](https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb)**
 
 Full records: [config.json](results/config.json) ·
 [training.csv](results/training.csv) ·
