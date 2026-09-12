@@ -13,13 +13,14 @@ what the agent learned, and how to reproduce it.
 
 | Path | What it holds |
 |---|---|
-| `pacman_dqn.ipynb` | The executed notebook. All cell outputs from the final run are visible |
+| `pacman_dqn.ipynb` | The executed notebook, saved with all outputs from this run |
 | `results/comparison.json` | Five before scores and five after scores, on seeds 101, 202, 303, 404, 505 |
 | `results/training_dashboard.png` | Score, loss, and exploration curves |
-| `results/demos/` | Untrained GIF, best trained GIF, and the intermediate GIFs |
+| `results/demos/` | 307 GIFs: the untrained game, 305 demonstrations, and the best trained game |
 | `results/config.json` | Settings, hardware, and package versions |
-| `results/training.csv` | One row per completed game |
+| `results/training.csv` | One row for each of the 7,628 completed games |
 | `results/training_summary.json` | Status, episodes, decisions, learning updates, elapsed time |
+| `results/demo_scores.json` | Score and length of every demonstration game |
 | `stop_training_at.sh` | Ends the training loop at a set clock time. See "How the run was controlled" |
 
 Model checkpoints are not in this repository. Each checkpoint is 6.76 MB and a run writes
@@ -77,17 +78,27 @@ A higher ceiling costs nothing: checkpoints scale with episodes reached, not wit
 An earlier plan used `EPISODES = 8000`. At the fast measured rate that budget completes in
 6.3 hours, so the run could end before morning and leave the machine idle. I raised it.
 
+**The measurement was wrong, and the ceiling absorbed the error.** The run reached 288
+decisions per second, above the 62 to 169 range measured beforehand. The machine had been
+running for 30 days with swap 90% full and 0.1 GB of free memory. A restart before the run
+removed that, and the throughput nearly doubled. At 288 decisions per second, `EPISODES = 8000`
+would have completed at about 04:30 and wasted two hours. The ceiling of 20,000 was reached
+at 38%, so the clock decided the run length, exactly as intended.
+
 ## How the run was controlled
 
 ```sh
-.venv/bin/python -m jupyter lab pacman_dqn.ipynb   # then Run All at 00:00
-./stop_training_at.sh 06:00                        # in a second terminal
+.venv/bin/python -m jupyter lab pacman_dqn.ipynb   # then Run All
+./stop_training_at.sh 06:47                        # in a second terminal
 ```
 
 [`stop_training_at.sh`](stop_training_at.sh) finds the notebook kernel, keeps the Mac awake,
-waits until 06:00, and sends one interrupt. It sends nothing if `training_summary.json`
-already exists, because that file means training has ended and an interrupt would then
-break the evaluation.
+waits until the set time, and sends one interrupt. It sends nothing if this run's
+`training_summary.json` already exists, because that file means training has ended and an
+interrupt would then break the evaluation.
+
+The run started at 00:47 and was stopped at 06:47. The machine was restarted first, for the
+reason given above.
 
 ## What I expected, and what happened
 
@@ -98,49 +109,157 @@ five seeds, and at least one seed that does not improve. I expect the agent to m
 pellets and clear corridors. I do not expect it to hunt ghosts, for the reason in
 "One limitation". Loss may fall while the score does not rise.
 
-**What I observed:** _pending the run._
+**What I observed.** The mean rose from 492 to **2578**, a gain of 2086 points. The agent
+moves toward pellets and clears corridors, and it survives 66% longer. Two parts of the
+prediction were wrong. I expected at least one seed that did not improve, and **all five
+improved**. I expected the loss might fall while the score did not rise, and the opposite
+happened: the loss rose early and then stayed near 0.11 for the whole run, while the score
+more than doubled. Loss and playing strength moved independently, which is the point the
+brief makes, in the opposite direction from the one I predicted.
 
 ## Results
 
-_Pending the run. This section is filled from the actual outputs._
-
 ### Five evaluation games, before and after
 
-| Game | Seed | Before (untrained) | After (trained) |
-|---|---|---|---|
-| 1 | 101 | 350 | _pending_ |
-| 2 | 202 | 500 | _pending_ |
-| 3 | 303 | 320 | _pending_ |
-| 4 | 404 | 800 | _pending_ |
-| 5 | 505 | 490 | _pending_ |
-| **Mean** | | **492** | _pending_ |
+Same five seeds, 5% exploration, 3,000-decision cap, applied identically before and after.
 
-The before scores are fixed. The notebook calls `torch.manual_seed(42)` immediately before
-it builds the network, so the untrained weights are identical on every run. Full data:
-[comparison.json](results/comparison.json).
+| Game | Seed | Before (untrained) | After (trained) | Change |
+|---|---|---|---|---|
+| 1 | 101 | 350 | 2790 | +2440 |
+| 2 | 202 | 500 | 2330 | +1830 |
+| 3 | 303 | 320 | 2610 | +2290 |
+| 4 | 404 | 800 | 3110 | +2310 |
+| 5 | 505 | 490 | 2050 | +1560 |
+| **Mean** | | **492** | **2578** | **+2086** |
+
+The mean score rose by a factor of 5.2. Full data: [comparison.json](results/comparison.json).
+
+The before scores reproduce exactly for anyone running the notebook unmodified. The notebook
+calls `torch.manual_seed(42)` immediately before it builds the network, so the untrained
+weights are identical on every machine. The baseline is 492, not the 237 a random-action
+agent scores.
+
+**This result is not within noise.** The change in mean is 2086. The spread across the five
+trained seeds is 1060, from 2050 to 3110. The change is about twice the spread. Every seed
+improved, and the weakest trained game (2050) beats the strongest untrained game (800) by
+1250 points.
+
+**What the agent does differently.** Two measurements separate survival from skill.
+
+| | Before | After |
+|---|---|---|
+| Decisions per game | 589 | 976 |
+| Raw game points per decision | 0.84 | 2.64 |
+
+The agent lives 66% longer and scores 3.1 times more per decision. It is not only surviving,
+it is eating more while it lives.
+
+**It still dies every game.** No evaluation game reached the 3,000-decision cap, before or
+after. The longest trained game lasted 1018 decisions of the 3000 allowed. Across all 305
+demonstration games recorded during training, not one reached the cap. Death ends every
+game, so ghost avoidance is still the limit on the score.
 
 ### Training dashboard
 
-_Pending the run._ Raw score per game, mean update loss, and training exploration.
-A falling loss is not evidence of better play. Read the score panel, not the loss panel.
+![Training dashboard](results/training_dashboard.png)
+
+**Read the score panel, not the loss panel.** The 25-game average (orange) rises steadily
+from about 700 to about 2100 across 7,628 episodes. Individual games (pale blue) spread from
+near zero to 5,600, which is why the average matters.
+
+The loss panel shows the opposite of the usual warning. The loss did **not** fall. It rose
+from 0.02 to about 0.13 in the first 100 episodes, then stayed between 0.10 and 0.14 for the
+rest of the run, with only a slight decline at the end. Meanwhile the score more than
+doubled. A flat loss did not mean a flat agent. The loss measures how well the network
+predicts its own moving target, not how well the agent plays.
+
+The exploration panel confirms the setting: 100% during the 1,000-decision warm-up, then a
+flat 15% to the last episode. There is no decay.
+
+### Training score by segment
+
+Training scores use 15% exploration, so they are not comparable with the evaluation numbers
+above. The trend is what matters.
+
+| Episodes | Mean score | Mean decisions | Mean loss |
+|---|---|---|---|
+| 1 – 762 | 811 | 631 | 0.117 |
+| 763 – 1524 | 1033 | 693 | 0.128 |
+| 1525 – 2286 | 1209 | 739 | 0.115 |
+| 2287 – 3048 | 1345 | 771 | 0.111 |
+| 3049 – 3810 | 1453 | 806 | 0.120 |
+| 3811 – 4572 | 1670 | 852 | 0.126 |
+| 4573 – 5334 | 1800 | 888 | 0.116 |
+| 5335 – 6096 | 1924 | 925 | 0.100 |
+| 6097 – 6858 | 1962 | 924 | 0.099 |
+| 6859 – 7620 | 1993 | 932 | 0.096 |
+
+The score rises in every segment. Episode length rises in every segment but the last. The
+gain per segment shrinks near the end, from +222 in the second segment to +31 in the last,
+so the run was approaching a plateau when it stopped. Full data: [training.csv](results/training.csv).
 
 ### Gameplay
 
-_Pending the run._ Untrained GIF, best trained GIF, and the intermediate GIFs.
-Each GIF plays at 4x speed and shows the first 20 seconds of game time.
-The trained GIF is the best of five evaluation games, selected by full-game score.
+**Before training (untrained network):**
+
+![Untrained](results/demos/episode_0000.gif)
+
+**After training (best of the five evaluation games, 3110 points):**
+
+![Trained](results/demos/final_best.gif)
+
+**Progress during training.** One demonstration game every 25 episodes, at the evaluation
+exploration rate of 5%, on seed 101. All 305 are in [results/demos/](results/demos/).
+
+| After 25 | After 250 | After 1000 |
+|---|---|---|
+| ![25](results/demos/episode_0025.gif) | ![250](results/demos/episode_0250.gif) | ![1000](results/demos/episode_1000.gif) |
+
+| After 2500 | After 5000 | After 7625 |
+|---|---|---|
+| ![2500](results/demos/episode_2500.gif) | ![5000](results/demos/episode_5000.gif) | ![7625](results/demos/episode_7625.gif) |
+
+Mean demonstration score over each window of about 11 games:
+
+| Episodes | 25–250 | 1000–1250 | 2500–2750 | 5000–5250 | 7375–7625 |
+|---|---|---|---|---|---|
+| Score | 530 | 933 | 1474 | 2195 | 2179 |
+| Decisions | 584 | 637 | 833 | 856 | 931 |
+
+The best single demonstration game scored 5140, at episode 5225. The last two windows are
+level, which is the same plateau the training segments show.
+
+Each GIF plays at 4x speed and shows the first 20 seconds of game time. The trained GIF is
+the best of five evaluation games, selected by full-game score.
 
 ### What the run cost
 
 | | |
 |---|---|
-| Status | _pending_ |
-| Completed episodes | _pending_ |
-| Total decisions | _pending_ |
-| Learning updates | _pending_ |
-| Elapsed time | _pending_ |
-| Hardware | Apple M5, MPS |
+| Status | **Interrupted**, by design, at 06:47 after six hours |
+| Completed episodes | 7,628 of a 20,000 ceiling |
+| Total decisions | 6,225,108 |
+| Learning updates | 1,556,027 |
+| Elapsed time | 6.00 hours |
+| Throughput | 288 decisions per second |
+| Against the DQN paper's 50M decisions | 12.5% |
+| Hardware | Apple M5, MPS, 16 GB unified memory |
 | Software | Python 3.13.15, torch 2.14.0, gymnasium 1.3.0, ale-py 0.11.2, macOS 26.4.1 arm64 |
+
+The run was stopped by one interrupt at a set clock time, not by exhausting the episode
+ceiling. This is a disclosed limitation, not a failure. The notebook catches the interrupt,
+records the status as `interrupted`, and saves the model, metrics and plot before the
+evaluation runs.
+
+Full records: [config.json](results/config.json) ·
+[training.csv](results/training.csv) ·
+[training_summary.json](results/training_summary.json) ·
+[demo_scores.json](results/demo_scores.json)
+
+**One harmless output in the notebook.** The package-install cell prints
+`No module named pip`. The environment was built with `uv`, which does not install `pip`
+into the virtual environment. Every package was already present, and the version cell below
+it confirms them. The run is unaffected.
 
 ## How the agent learns, in plain language
 
@@ -165,17 +284,39 @@ That copy keeps the target from moving as fast as the learner.
 
 ## One limitation
 
-Training rewards are clipped to the range -1 to 1. A pellet scores 10 points and a ghost
+**Training rewards are clipped to the range -1 to 1.** A pellet scores 10 points and a ghost
 scores 200 to 1,600 points. After clipping, both count as 1. The agent therefore learns to
 maximise the number of scoring events, not their value. It has no reason to learn the
 high-scoring strategy of the game, which is to eat a power pellet and then hunt ghosts.
 
+This limitation comes from the code, in `ReplayMemory.add`, so it holds whatever the score
+is. The run is consistent with it. The trained agent scores 2.64 raw points per decision. A
+mean of 2578 points is about what clearing most of a level of 10-point pellets gives. A
+policy that hunted ghosts would show a much higher score per decision, because one ghost
+chain can pay 1,600 points in a few decisions.
+
+**A second limitation, from the same evidence.** Losing a life gives no penalty and does not
+end the episode. The cost of dying is only the future pellets not eaten, which is a weak and
+delayed signal. Every one of the 5 evaluation games and all 305 demonstration games ended in
+death rather than at the 3,000-decision cap. The longest trained game used 1018 decisions of
+the 3000 allowed. Ghost avoidance is therefore the binding limit on the score, and it is the
+part the reward structure teaches least well.
+
 ## One next experiment
 
-Replace the constant exploration rate with a decay from 1.0 to 0.05 across the first half of
-training. Change that one setting only. The current run explores at a fixed 15% to the last
-episode, which slows early learning and adds noise to late learning. A decay gives broad data
-early and clean, on-policy data late. It costs no extra compute.
+**Replace the constant exploration rate with a decay from 1.0 to 0.05 across the first half
+of training.** Change that one setting only.
+
+The run supports this more strongly than I expected. Exploration stayed at a flat 15% to the
+last episode, so roughly one move in seven was random even at episode 7,628, on top of the
+25% sticky actions. The score gain per segment fell from +222 early to +31 in the last
+segment, and the demonstration windows were level at about 2,190 across the final 2,600
+episodes. A plateau that arrives while a sixth of the moves are still random is the pattern a
+decay schedule addresses: broad data early, and clean on-policy data late. It costs no extra
+compute.
+
+I would know this was wrong if a decayed run reached the same plateau at the same episode
+count. That would mean the limit is the reward structure, not the exploration schedule.
 
 ## Assignment objectives
 

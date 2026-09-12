@@ -1,0 +1,16 @@
+.venv/
+.ipynb_checkpoints/
+__pycache__/
+pacman_runs/
+*.pt
+.DS_Store
+.vscode/settings.json
+
+# publish selected evidence
+!results/
+
+# AI log scratch state (not part of the record)
+docs/ai-log/.state.json
+
+# run logs and notebook backups from the unattended runner
+logs/
