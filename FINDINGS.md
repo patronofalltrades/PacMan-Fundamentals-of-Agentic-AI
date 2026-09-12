@@ -239,12 +239,38 @@ resets between windows.
 
 ### Why this is the reward clipping, measured
 
-Training rewards are clipped to the range -1 to 1. The four ghosts in a chain pay 200, 400,
-800 and 1600 points, and after clipping each is worth exactly 1, the same as one 10-point
-pellet. Crossing the maze for the fourth ghost pays the agent what eating one adjacent pellet
-pays. The agent therefore takes whichever ghosts are nearby and ignores the rest.
+The training loop sends the same reward to two places, and they are not the same number:
 
-A full chain is worth 3000 points. The agent collects 200 to 600.
+```python
+next_obs, reward, ended, truncated, _ = train_env.step(action)
+replay.add(obs, action, reward, ...)   # clipped to [-1, 1] inside add()
+score += reward                        # raw, never clipped
+```
+
+The four ghosts in a chain pay 200, 400, 800 and 1600 game points. After clipping each is
+worth exactly 1 to the network, the same as one 10-point pellet.
+
+Now price the actual decision. Two ghosts remain and both are across the maze. The trip costs
+about 20 decisions, in which the agent could instead eat about 5 pellets.
+
+| | Chase the last two ghosts | Eat 5 nearby pellets | Better choice |
+|---|---|---|---|
+| Game points | 2400 | 50 | Chase, by 48 times |
+| Clipped training reward | 2 | 5 | Eat pellets, by 2.5 times |
+
+**Clipping does not flatten the incentive, it reverses it.** Under the reward function the
+agent was trained on, abandoning the chain is correct play. The agent is optimal for the
+objective it was given, and that objective disagrees with the one it is graded on:
+
+- The agent maximises the discounted count of scoring events, `sum of gamma^t * r_clipped`.
+- The leaderboard measures the sum of raw game points, `sum of r_raw`.
+
+These have different optima. A full chain is worth 3000 points. The agent collects 200 to 600.
+
+This is an objective mismatch rather than a training failure, and it is the inverse of the
+usual specification-gaming story. The agent did not find a loophole to score absurdly high. It
+was told that a 1600-point ghost and a 10-point pellet are the same thing, it believed that,
+and it plays an orderly pellet game while leaving 2,400 points on the board.
 
 **The limitation I first wrote was wrong.** I wrote that the agent has no reason to learn the
 high-scoring strategy, and would not eat power pellets or hunt ghosts. It does both. The

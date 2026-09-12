@@ -290,9 +290,36 @@ four screens span 16 frames.
 right, and the four diagonals. One move in four repeats the previous move instead of the
 chosen one. That is the sticky-action setting, and it makes the game less predictable.
 
-**How it is rewarded.** Game points supply the reward. Pellets, power pellets, ghosts, and
-fruit all score. During training every reward is clipped to the range -1 to 1, so every
-scoring event counts as 1. All reported scores are raw game points.
+**How it is rewarded.** Game points supply the reward, but the agent is not trained on game
+points. Two different numbers come out of the same event, and the training loop sends them to
+two places:
+
+```python
+next_obs, reward, ended, truncated, _ = train_env.step(action)
+replay.add(obs, action, reward, ...)   # clipped to [-1, 1] inside add()
+score += reward                        # raw, never clipped
+```
+
+The raw number is summed into the score this README reports. A clipped copy goes into the
+replay memory and becomes the training signal. After clipping, a 10-point pellet and a
+1,600-point ghost are both worth exactly 1.
+
+| | Game points | Training reward |
+|---|---|---|
+| Pellet | 10 | 1 |
+| Power pellet | 50 | 1 |
+| Ghost, first to fourth in a chain | 200, 400, 800, 1600 | 1, 1, 1, 1 |
+
+**The network never sees a game point.** It maximises the number of scoring events, not their
+value. Every score in this README is raw game points, so the number the agent optimises and
+the number it is graded on are not the same number. "One limitation" shows where those two
+numbers disagree.
+
+Clipping is not a mistake in the notebook. It comes from the 2015 DQN paper, which trained one
+architecture with one set of hyperparameters across 49 Atari games whose scores range from
+about 1 to many thousands. It also bounds the size of a single gradient, because a 1,600-point
+reward would otherwise produce one very large error and damage the weights. It buys
+generality and stability, and it pays for them in fidelity.
 
 **How it learns.** A convolutional network reads the four screens and predicts one value per
 move. The agent stores each experience in a replay memory. Every four decisions it samples
@@ -323,8 +350,20 @@ The agent behaves exactly as that structure predicts.
 | It never finishes a chain | Across the last 12 demonstration games, every ghost-sized jump is 200 or 400. There is no 800 and no 1600 |
 
 So the agent takes the one or two ghosts that are convenient and ignores the rest. It
-collects 200 to 600 points from a power pellet that is worth 3000. It learned the cheap half
-of the strategy, because clipping is what made the expensive half worthless.
+collects 200 to 600 points from a power pellet that is worth 3000.
+
+**Clipping does not flatten the incentive. It reverses it.** Consider the choice the agent
+faces with two ghosts left and both across the maze. The trip costs about 20 decisions, and
+in those decisions it could eat about 5 pellets instead.
+
+| | Chase the last two ghosts | Eat 5 nearby pellets | Better choice |
+|---|---|---|---|
+| In game points | 2400 | 50 | Chase, by 48 times |
+| In clipped training reward | 2 | 5 | Eat pellets, by 2.5 times |
+
+Under the reward it was actually trained on, walking away from the chain is the correct move.
+**The agent did not fail to learn. It learned its reward function exactly, and the reward
+function is wrong about what the game is worth.**
 
 Measured by reading the on-screen score directly from the gameplay GIFs, frame by frame.
 The method and the full numbers are in [FINDINGS.md](FINDINGS.md), section 8.
@@ -345,6 +384,10 @@ rest. A square-root transform keeps large rewards bounded enough to stay stable,
 1600-point ghost is then worth 40 units against 3.2 for a pellet, so finishing a chain is
 worth pursuing. The measured ceiling this would lift is large: the agent currently collects
 200 to 600 points from a power pellet worth 3000.
+
+This is not an invented fix. Invertible value rescaling, `h(x) = sign(x)(sqrt(|x|+1) - 1) + ex`,
+is used by Ape-X and R2D2 for this exact purpose: it removes reward clipping while keeping the
+training targets small enough to stay stable.
 
 **How I would know I was wrong.** If the trained agent still shows no 800 or 1600 score jump,
 the limit is not the reward transform. The next suspect would then be the exploration
