@@ -57,9 +57,20 @@ The network predicts the points it expects. To build the goal, the program uses 
 own prediction of the next position. A second, slower copy of the network supplies that
 prediction. The program refreshes that copy every 1000 decisions.
 
-As the agent reaches better positions, the numbers it must predict grow. The goal moves away
-as fast as the network approaches it. The error therefore stays about the same, while the
-play improves.
+```mermaid
+flowchart LR
+    A["The agent improves"] --> B["It reaches places<br/>that are worth more points"]
+    B --> C["The numbers the network<br/>must predict grow"]
+    C --> D["The goal moves away"]
+    D --> E["The gap between the prediction<br/>and the goal stays the same"]
+    E --> A
+```
+
+The goal moves away as fast as the network approaches it. The error therefore stays about the
+same, while the play improves.
+
+Think of a person walking towards a horizon. The walker moves. The distance does not change.
+That distance is the error. It says nothing about the progress of the walker.
 
 **Do not read the error as a measure of progress.**
 
@@ -252,11 +263,31 @@ starts again after each power pellet.
 
 The training loop sends the same number to two places. They are not the same number.
 
+```mermaid
+flowchart TD
+    A["The agent eats a ghost.<br/>The game pays 200 points."] --> B{"The same number<br/>goes two ways"}
+    B -->|"kept at its true size"| C["200"]
+    B -->|"cut down to 1"| D["1"]
+    C --> E["The score.<br/>This is what the README reports,<br/>and what the class list measures."]
+    D --> F["The training signal.<br/>This is the only thing<br/>the network ever learns from."]
+```
+
+Three lines of the program make this split.
+
 ```python
 next_obs, reward, ended, truncated, _ = train_env.step(action)
-replay.add(obs, action, reward, ...)   # this copy is cut to 1
-score += reward                        # this copy keeps its true size
+replay.add(obs, action, reward, ...)
+score += reward
 ```
+
+**Line 1.** The agent makes a move. The game answers with a new picture, and with the points
+that the move earned. For a ghost, that is 200.
+
+**Line 2.** The program writes the move into its memory. On the way in, it cuts the 200 down
+to 1. The network learns only from this memory, so 1 is the only number it ever sees.
+
+**Line 3.** The program adds the same 200 to the score, at full size. That score is the number
+in this repository, and on the class list.
 
 The four ghosts in a chain pay 200, 400, 800 and 1600 game points. After clipping, each is
 worth exactly 1 to the network. One 10-point pellet is also worth 1.
@@ -264,13 +295,25 @@ worth exactly 1 to the network. One 10-point pellet is also worth 1.
 Now price the real choice. Two ghosts remain, and both are far away. The journey costs about 20
 decisions. In those decisions the agent could eat about five pellets instead.
 
+```mermaid
+flowchart TD
+    A["Two ghosts are left.<br/>Both are far away.<br/>Chase them, or eat nearby pellets?"]
+    A --> B["Judged in game points"]
+    A --> C["Judged in training reward"]
+    B --> D["Chase: 2400<br/>Pellets: 50"]
+    C --> E["Chase: 2<br/>Pellets: 5"]
+    D --> F["Chase wins,<br/>by 48 times"]
+    E --> G["Pellets win,<br/>by 2.5 times"]
+    G --> H["The agent learned from the reward,<br/>so it eats the pellets.<br/>2400 points stay on the screen."]
+```
+
 | | Chase the two ghosts | Eat five pellets | Better choice |
 |---|---|---|---|
 | Game points | 2400 | 50 | Chase, by 48 times |
 | Training reward | 2 | 5 | Eat pellets, by 2.5 times |
 
-**Clipping does not reduce the reason to chase. It reverses it.** Under the signal the agent
-received, leaving the chain is correct play.
+**Clipping does not reduce the reason to chase. It reverses it.** The two rows point in
+opposite directions. Under the signal the agent received, leaving the chain is correct play.
 
 The agent is correct for the instructions it was given. Those instructions disagree with the
 measure used to grade it.
@@ -309,8 +352,28 @@ collect 2400 points.
 A square-root rule keeps large rewards small enough for safe training. A 1600-point ghost is
 then worth 40 units, against 3.2 for a pellet. Finishing a chain becomes worth the journey.
 
+The standard form of the rule is this:
+
+```python
+h(x) = sign(x) * (sqrt(abs(x) + 1) - 1) + 0.001 * x
+```
+
+The formula looks difficult. What it does is simple. It squashes big numbers towards small
+ones, and leaves small ones almost unchanged. `sign(x)` keeps a penalty negative. The last
+term stops the rule from losing information completely.
+
+| Reward | Game points | After clipping, now | After the square-root rule |
+|---|---|---|---|
+| One pellet | 10 | 1 | 3.2 |
+| First ghost | 200 | 1 | 14.2 |
+| Fourth ghost | 1600 | 1 | 40.0 |
+
+Clipping makes the fourth ghost equal to one pellet. The new rule makes it worth about 12
+pellets. That is still far below the true 160 pellets, and that is the purpose. The numbers
+stay small enough for safe training, and the order survives.
+
 This is not a new idea. Two well-known systems, Ape-X and R2D2, use this rule for this exact
-purpose. The standard form is `h(x) = sign(x)(sqrt(|x| + 1) - 1) + ex`.
+purpose.
 
 **How to know the answer is wrong.** If the trained agent still shows no rise of 800 or 1600,
 then the reward rule is not the limit. The exploration rate is the next thing to examine.

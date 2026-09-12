@@ -54,6 +54,23 @@ file correctly. Nothing was removed from the file.
 
 ## What the program does, in plain words
 
+### One cycle, from picture to move
+
+```mermaid
+flowchart LR
+    A["The game screen<br/>one colour picture"] --> B["Make it grey<br/>and small<br/>84 by 84"]
+    B --> C["Keep the last<br/>four pictures"]
+    C --> D["The network<br/>looks at all four"]
+    D --> E["It gives a value<br/>to each of nine moves"]
+    E --> F["Take the best move<br/>85 times in 100"]
+    E --> G["Take a random move<br/>15 times in 100"]
+    F --> H["The game advances<br/>four pictures"]
+    G --> H
+    H --> A
+```
+
+The agent repeated this cycle 6,225,108 times during the run.
+
 ### What it sees
 
 The program sees the game screen, and nothing else. It does not read the memory of the game.
@@ -84,9 +101,20 @@ counts as 1 during training, whatever its size. The section
 A neural network reads the four pictures. It predicts a value for each of the nine moves.
 The value is the points the program expects if it makes that move.
 
-The program keeps its experience in a memory. Every four moves, it takes 32 old experiences
-from that memory. It compares its prediction with the result. It then corrects the network a
-little. It did this 1,556,027 times during the run.
+```mermaid
+flowchart LR
+    A["Make one move"] --> B["Write down what happened<br/>into a memory<br/>of the last 50,000 moves"]
+    B --> C["Every fourth move,<br/>take 32 old moments<br/>at random"]
+    C --> D["Compare the prediction<br/>with what really happened"]
+    D --> E["Correct the network<br/>a little"]
+    E --> A
+```
+
+The program does not learn from the move it just made. It learns from 32 old moments, taken at
+random from its memory. Moments that follow each other are too similar, and a network that
+learns from them alone learns badly.
+
+The program made 1,556,027 corrections during the run.
 
 ## Words used in this repository
 
@@ -187,9 +215,19 @@ used 38% of the 20000 limit, so the clock decided the length, as intended.
 ./scripts/stop_training_at.sh 06:47                # in a second terminal
 ```
 
+```mermaid
+flowchart LR
+    A["00:47<br/>Start.<br/>Measure the untrained<br/>network: 492"] --> B["00:47 to 06:47<br/>Train.<br/>7,628 games"]
+    B --> C["06:47<br/>One stop signal.<br/>Save everything."]
+    C --> D["06:49<br/>Measure the trained<br/>network: 2578"]
+    D --> E["06:49<br/>Write the files<br/>into the run folder"]
+```
+
 [`scripts/stop_training_at.sh`](scripts/stop_training_at.sh) finds the running program. It
 keeps the computer awake. It waits until the set time. It then sends one stop signal. It sends
 nothing if the run has already finished, because a stop signal would then damage the test.
+
+The first and last steps use identical conditions. That is what makes 492 and 2578 comparable.
 
 ## What I expected, and what happened
 
@@ -423,17 +461,36 @@ power pellet that is worth 3000.
 
 ### Why this happens
 
-The program does not learn from game points. Look at two lines of the training loop. The same
-number goes to two places:
+**The program does not learn from game points.** There are two different numbers, and they
+follow two different paths.
+
+```mermaid
+flowchart TD
+    A["The agent eats a ghost.<br/>The game pays 200 points."] --> B{"The same number<br/>goes two ways"}
+    B -->|"kept at its true size"| C["200"]
+    B -->|"cut down to 1"| D["1"]
+    C --> E["The score.<br/>This is what this page reports,<br/>and what the class list measures."]
+    D --> F["The training signal.<br/>This is the only thing<br/>the network ever learns from."]
+```
+
+This split happens in two lines of the program. Here they are, with what each line does.
 
 ```python
 next_obs, reward, ended, truncated, _ = train_env.step(action)
-replay.add(obs, action, reward, ...)   # this copy is cut to 1
-score += reward                        # this copy keeps its true size
+replay.add(obs, action, reward, ...)
+score += reward
 ```
 
-The second line makes the score this page reports. The first line makes the signal the
-network learns from, and that copy is cut to 1.
+**Line 1.** The agent makes a move. The game answers. It returns a new picture, and the points
+that the move earned. For a ghost, those points are 200.
+
+**Line 2.** The program writes the move into its memory. On the way in, it cuts the 200 down to
+1. The network later learns from this memory, so 1 is the only number it ever sees.
+
+**Line 3.** The program adds the same 200 to the score, at its true size. This score is what
+this page reports.
+
+One event. Two numbers. The reader sees 200. The network sees 1.
 
 | | Game points | Training reward |
 |---|---|---|
@@ -447,13 +504,26 @@ worth 160 pellets.
 Now look at the choice the agent makes. Two ghosts remain, and both are far away. The journey
 costs about 20 decisions. In those decisions the agent could eat about five pellets instead.
 
+```mermaid
+flowchart TD
+    A["Two ghosts are left.<br/>Both are far away.<br/>Chase them, or eat nearby pellets?"]
+    A --> B["Judged in game points"]
+    A --> C["Judged in training reward"]
+    B --> D["Chase: 2400<br/>Pellets: 50"]
+    C --> E["Chase: 2<br/>Pellets: 5"]
+    D --> F["Chase wins,<br/>by 48 times"]
+    E --> G["Pellets win,<br/>by 2.5 times"]
+    G --> H["The agent learned from the reward,<br/>so it eats the pellets.<br/>2400 points stay on the screen."]
+```
+
 | | Chase the two ghosts | Eat five pellets | Better choice |
 |---|---|---|---|
 | In game points | 2400 | 50 | Chase, by 48 times |
 | In training reward | 2 | 5 | Eat pellets, by 2.5 times |
 
-**Clipping does not reduce the reason to chase. It reverses it.** Under the signal the agent
-received, leaving the chain is the correct move.
+**Clipping does not reduce the reason to chase. It reverses it.** The two rows point in
+opposite directions. Under the signal the agent received, leaving the chain is the correct
+move.
 
 **The agent did not fail to learn. It learned its instructions exactly. The instructions are
 wrong about the value of the game.**
@@ -483,9 +553,29 @@ Full method and numbers: [FINDINGS.md](FINDINGS.md), section 8.
 **Replace reward clipping with a rule that keeps the order of the rewards. Change that one
 setting only.**
 
-A square-root rule is the standard choice. It makes a 1600-point ghost worth 40 units, and a
-pellet worth 3.2 units. Finishing a chain then becomes worth the journey. The rule still keeps
-the numbers small enough for safe training.
+A square-root rule is the standard choice. It shrinks large numbers, but it keeps them in
+order. Clipping does not keep them in order: it makes every number the same.
+
+```python
+h(x) = sign(x) * (sqrt(abs(x) + 1) - 1) + 0.001 * x
+```
+
+The formula looks difficult. What it does is simple. It is a rule that squashes big numbers
+towards small ones, and leaves small ones almost unchanged. `sign(x)` keeps a penalty negative.
+The last term stops the rule from losing information completely.
+
+Compare the three ways to treat the same four rewards:
+
+| Reward | Game points | After clipping, now | After the square-root rule |
+|---|---|---|---|
+| One pellet | 10 | 1 | 3.2 |
+| First ghost | 200 | 1 | 14.2 |
+| Fourth ghost | 1600 | 1 | 40.0 |
+
+Clipping makes the fourth ghost equal to one pellet. The square-root rule makes it worth about
+12 pellets. That is still less than the true 160 pellets, and that is the point: the numbers
+stay small enough for safe training, but the order survives. Finishing a chain then becomes
+worth the journey.
 
 This is not a new idea. Two well-known systems, Ape-X and R2D2, use this rule for this exact
 purpose.
