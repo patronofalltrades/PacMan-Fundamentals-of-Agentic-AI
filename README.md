@@ -27,6 +27,69 @@ The test conditions were identical both times.
 The score increased by 2086 points. That is 5.2 times the first score. The program improved
 in all five test games. [The full table is below](#the-five-test-games).
 
+## Short answers
+
+Each answer links to the full evidence.
+
+**Did the program learn to play?**
+Yes. The average score rose from 492 to 2578. That is 5.2 times better.
+
+**Could that be luck?**
+No. All five test games improved. The change in the average, 2086, is about two times the
+distance between the five results, 1060. The lowest score after training beats the highest
+score before training. The two sets do not overlap. See [The five test games](#the-five-test-games).
+
+**What does the program do better?**
+Two things at once. It lives 66% longer, and it collects 3.1 times more points in each
+decision. It is not only staying alive for longer.
+
+**Did it learn the advanced strategy of the game?**
+Half of it. The advanced strategy is to eat a power pellet, then eat all four ghosts. The
+program learned to eat power pellets, in 100% of its late games. It eats ghosts. **It never
+eats more than two.** See [What the agent learned that I did not expect](#what-the-agent-learned-that-i-did-not-expect).
+
+**Why does it stop at two ghosts?**
+Because of how it was rewarded. The four ghosts pay 200, 400, 800 and 1600 game points. The
+program does not learn from game points. Each ghost is worth 1 to it, and so is one small
+pellet. Walking across the maze for the last ghost pays what one nearby pellet pays. See
+[One limitation](#one-limitation).
+
+**Did the prediction error fall during training?**
+No. It stayed level for the whole run, while the score more than doubled. A level error does
+not mean a level program. See [The training chart](#the-training-chart).
+
+**How long did the run take?**
+Six hours. It played 7,628 games, made 6,225,108 decisions, and corrected the network
+1,556,027 times. See [What the run cost](#what-the-run-cost).
+
+**What settings did you select?**
+Exploration 0.15, a limit of 20000 games, and a learning rate of 0.0001. I also raised the
+memory from 5000 to 50000 experiences, and turned off the popup windows. See
+[The settings I chose, and why](#the-settings-i-chose-and-why).
+
+**Which of your reasons is weakest?**
+The exploration rate of 0.15. I selected the value between the default and the value I first
+argued for. I did not test it.
+
+**What did you get wrong?**
+Three things, and all three were wrong in a good direction. I expected one of the five games
+not to improve, and all five improved. I expected the error to fall while the score stayed
+level, and the opposite happened. I stated that the program would never chase ghosts, and it
+chases ghosts. See [What I expected, and what happened](#what-i-expected-and-what-happened).
+
+**What would you change next?**
+The reward rule. Replace the rule that makes every event worth 1 with a square-root rule that
+keeps large rewards larger. See [One next experiment](#one-next-experiment).
+
+**What helped the most?**
+A restart of the computer. It had run for 30 days, and its memory store was 90% full. After
+the restart the program ran at 288 decisions each second, against 62 to 169 before. That gave
+more than any setting on this page.
+
+**Why is the notebook an empty page on GitHub?**
+The file is 14.6 MB, and the GitHub viewer cannot show a file of that size.
+**[Use this link instead.](https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb)**
+
 ## How to read this repository
 
 Start with this page. It contains the complete explanation.
@@ -35,6 +98,7 @@ Start with this page. It contains the complete explanation.
 |---|---|---|
 | `README.md` | This page. The full explanation and all results | Every reader |
 | `FINDINGS.md` | A longer analysis. It gives the evidence for each statement here | A reader who wants proof |
+| `CLASS_NOTES.md` | One page of speaking notes for the class presentation | Me, in class |
 | `pacman_dqn.ipynb` | The program, with the output of the real run. **[Read it here](https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb)** | A reader who wants the code |
 | `results/` | The measurements from the run | A reader who wants the raw data |
 | `results/demos/` | 307 short animations of the program playing | Every reader |
