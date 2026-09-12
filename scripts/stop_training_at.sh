@@ -11,7 +11,8 @@
 set -eu
 
 STOP_AT="${1:-06:00}"
-cd "$(dirname "$0")"
+# Work from the project root, one level above this script.
+cd "$(dirname "$0")/.."
 
 echo "Waiting for the notebook kernel..."
 while true; do

@@ -2,6 +2,8 @@
 # Copy the evidence from the newest run in pacman_runs/ into results/ for publishing.
 # Model checkpoints (*.pt) are left behind on purpose; they stay in the local ZIP.
 set -euo pipefail
+# Work from the project root, one level above this script.
+cd "$(dirname "$0")/.."
 RUN="${1:-$(ls -d pacman_runs/*/ 2>/dev/null | sort | tail -1)}"
 [ -n "$RUN" ] && [ -d "$RUN" ] || { echo "No run folder found. Pass one as an argument."; exit 1; }
 echo "Collecting from: $RUN"

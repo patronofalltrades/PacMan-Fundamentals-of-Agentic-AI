@@ -1,97 +1,110 @@
-# Findings and observations
+# Findings
 
-What the run showed, beyond the headline score. The README reports the result.
-This document records what the evidence supports, what it does not, and what the
-method itself taught.
+This page gives the evidence behind each statement in the [README](README.md).
 
-Every number here comes from [`results/`](results/). The source for each is named.
+It answers three questions. What did the run show? What does the evidence not show? What did
+the method itself teach?
+
+Every number comes from the [`results/`](results/) folder. Each section names its source.
+
+The [README glossary](README.md#words-used-in-this-repository) explains the technical words.
 
 ---
 
-## 1. The agent learned, and the result is not noise
+## 1. The agent learned, and the result is not chance
 
-Mean evaluation score rose from **492 to 2578**, a gain of 2086 points.
+The average score rose from 492 to 2578. That is an increase of 2086 points.
 
-The honesty test the brief sets is whether the change in mean is larger than the
-spread across seeds. It is, by about two times.
+Five games is a small test. A small test can give a good result by chance. The check is to
+compare the change with the distance between the five results.
 
-| | Value |
+| Measure | Value |
 |---|---|
-| Change in mean | +2086 |
-| Spread across the five trained seeds | 1060 (2050 to 3110) |
-| Seeds that improved | 5 of 5 |
-| Weakest trained game vs. strongest untrained game | 2050 vs. 800 |
+| Change in the average | +2086 |
+| Distance between the five later results | 1060, from 2050 to 3110 |
+| Results that improved | 5 of 5 |
+| Lowest later result against highest earlier result | 2050 against 800 |
 
-No trained game scored lower than any untrained game. The two distributions do not
-overlap. Source: `results/comparison.json`.
+The change is about two times the distance. No later game scored less than any earlier game.
+The two sets of results do not overlap at any point.
+
+Source: `results/comparison.json`.
 
 ---
 
-## 2. The loss never fell, and the agent improved anyway
+## 2. The prediction error never fell, and the agent still improved
 
-This is the most useful finding for understanding what the loss measures.
+This is the most useful finding for understanding what the error measures.
 
-The brief warns that a falling loss is not evidence of better play. This run shows
-the same lesson from the other side. The loss **rose** from 0.02 to about 0.13 in
-the first 100 episodes, then stayed between 0.10 and 0.14 for the remaining 7,500
-episodes, declining only slightly at the end. Over the same period the mean score
-more than doubled.
+The course brief warns that a falling error does not prove better play. This run shows the
+same lesson from the opposite side.
 
-| Episodes | Mean score | Mean loss |
+The error **rose** from 0.02 to about 0.13 in the first 100 games. It then stayed between 0.10
+and 0.14 for the remaining 7500 games. It fell only a little at the end. In the same period
+the score more than doubled.
+
+| Games | Average score | Average error |
 |---|---|---|
 | 1 – 762 | 811 | 0.117 |
 | 3049 – 3810 | 1453 | 0.120 |
 | 6859 – 7620 | 1993 | 0.096 |
 
-A flat loss did not mean a flat agent. The reason is bootstrapping: the network is
-trained against a target built from its own predictions, supplied by a target network
-that is refreshed every 1,000 decisions. As the agent reaches higher-scoring states,
-the values it must predict grow. The target moves away as fast as the learner
-approaches it, so the error stays roughly constant while the policy improves.
+### Why the error stays level
 
-**Do not read the loss panel as a progress bar.** Source: `results/training.csv`,
-`results/training_dashboard.png`.
+The network is measured against a goal that it also produces.
+
+The network predicts the points it expects. To build the goal, the program uses the network's
+own prediction of the next position. A second, slower copy of the network supplies that
+prediction. The program refreshes that copy every 1000 decisions.
+
+As the agent reaches better positions, the numbers it must predict grow. The goal moves away
+as fast as the network approaches it. The error therefore stays about the same, while the
+play improves.
+
+**Do not read the error as a measure of progress.**
+
+Source: `results/training.csv`, `results/training_dashboard.png`.
 
 ---
 
-## 3. The agent both survives longer and scores faster
+## 3. The agent survives longer, and also collects points faster
 
-A higher score could mean only that the agent lives longer. It does not. Two
-measurements separate survival from skill.
+A higher score can have one dull explanation: the agent lives longer and eats the same pellets
+more slowly. Two measurements rule that out.
 
-| | Before | After | Change |
+| Measure | Before | After | Change |
 |---|---|---|---|
-| Decisions per game | 589 | 976 | +66% |
-| Raw game points per decision | 0.84 | 2.64 | +214% |
+| Decisions in one game | 589 | 976 | +66% |
+| Game points for each decision | 0.84 | 2.64 | +214% |
 
-If the agent had only learned to avoid dying, the points per decision would have
-stayed flat. It rose by more than three times. The agent is eating more **and**
-living longer. Source: `results/comparison.json`.
+If the agent had only learned to stay alive, the points for each decision would not change. It
+rose by more than three times. The agent eats more, and it also lives longer.
+
+Source: `results/comparison.json`.
 
 ---
 
-## 4. It never survives the time limit
+## 4. The agent never reaches the time limit
 
-Not one game reached the 3,000-decision cap: not the 5 untrained games, not the 5
-trained games, and not one of the 305 demonstration games recorded during training.
-The longest trained game used **1018 of the 3000 decisions allowed**, about a third.
+No game reached the limit of 3000 decisions. This is true of the 5 games before training, the
+5 games after training, and all 306 games recorded during training.
 
-Every game ends in death. This matters for the limitation argument: the cap is not
-binding, so ghost avoidance is what limits the score, and that is the part the reward
-structure teaches least well. Losing a life carries no penalty and does not end the
-episode, so the only cost of dying is the future pellets not eaten. That signal is
-weak and arrives late.
+The longest game after training used 1018 of the 3000 decisions. That is about one third.
+
+Every game ends because a ghost catches the agent. The time limit never stops a game. Avoiding
+ghosts is therefore the limit on the score. It is also the part the reward teaches least well:
+the agent receives no penalty when it loses a life, and the game continues. The only cost of
+dying is the pellets it does not eat later. That signal is weak, and it arrives late.
 
 Source: `results/comparison.json`, `results/demo_scores.json`.
 
 ---
 
-## 5. The run was approaching a plateau when it stopped
+## 5. The run was approaching its limit when it stopped
 
-The score rose in every one of the ten training segments, but the size of each gain
-fell steadily.
+The score rose in all ten groups of games. The size of each rise became smaller.
 
-| Segment | Gain over the previous segment |
+| Group | Rise above the group before |
 |---|---|
 | 763 – 1524 | +222 |
 | 3811 – 4572 | +217 |
@@ -99,99 +112,93 @@ fell steadily.
 | 6097 – 6858 | +38 |
 | 6859 – 7620 | +31 |
 
-The demonstration games show the same shape. Mean demonstration score was 2195
-across episodes 5000 to 5250, and 2179 across episodes 7375 to 7625. Flat across the
-final 2,600 episodes.
+The recorded games agree. The average was 2195 across games 5000 to 5250, and 2179 across
+games 7375 to 7625. Those two figures are level, across the last 2600 games.
 
-**This does not mean more training is useless.** The run reached 12.5% of the DQN
-paper's decision budget. A plateau at this point is more likely to be a limit of the
-exploration schedule or the reward structure than a limit of the method. Section 8
-gives the experiment that separates the two.
+**This does not mean that more training is useless.** The run used 12.5% of the decisions in
+the 2015 DQN paper. A limit at this point is more likely to come from the exploration rate or
+from the reward, than from the method. Section 9 gives the test that separates the two.
 
 Source: `results/training.csv`, `results/demo_scores.json`.
 
 ---
 
-## 6. The prediction was wrong in two ways, and a stated claim in a third
+## 6. Three things written before the run were wrong
 
-The prediction was recorded before the run and committed to this repository before
-training started. Two parts of it failed.
+The prediction was written before the run. It is recorded in the history of this repository.
 
-| Predicted | Observed |
+| Written before | What happened |
 |---|---|
-| At least one seed will not improve | All five improved |
-| Loss may fall while the score does not rise | Loss stayed flat while the score doubled |
-| Mean rises above 492 | Correct: 2578 |
-| Wide spread across seeds | Correct: 2050 to 3110 |
+| The average rises above 492 | Correct. It reached 2578 |
+| The five results lie far apart | Correct. They lie between 2050 and 3110 |
+| At least one of five does not improve | **Wrong.** All five improved |
+| The error may fall while the score does not rise | **Wrong.** The error stayed level while the score doubled |
+| The agent does not hunt ghosts | **Wrong.** The agent hunts ghosts |
 
-Both failures were in the same direction: the run went better than expected. The
-second failure is the more interesting one, because it inverts the warning in the
-brief rather than confirming it. Section 2 explains why.
-
-A third thing written before the run also turned out to be wrong, though it was a
-claim rather than a prediction. The limitation stated that the agent would not learn
-to eat power pellets or hunt ghosts. It does both. Section 8 gives the measurement and
-the corrected limitation.
+The last item was not a prediction. It was a statement about the method, and it appeared in an
+earlier version of the README. Section 8 gives the measurement that disproved it, and the
+corrected statement.
 
 ---
 
-## 7. A method finding: the machine was the bottleneck, not the settings
+## 7. The computer was the limit, not the settings
 
-Throughput was measured before the run at between 62 and 169 decisions per second,
-and the difference between those two figures was recorded as unexplained. The
-`SMOKE_TEST.md` note suggested Jupyter overhead or thermal throttling.
+The speed was measured before the run at between 62 and 169 decisions each second. The reason
+for that difference was recorded as unknown. The note suggested the notebook software, or heat.
 
-Neither was the cause. Before this run the machine had been running for 30 days, with
-swap 90% full and 0.1 GB of free memory. A restart cleared it. The run then held
-**288 decisions per second**, above the top of the measured range and 4.6 times the
-figure measured inside the notebook.
+Neither was the cause. The computer had run for 30 days without a restart. Its memory store was
+90% full, and only 0.1 GB was free. A restart cleared it. The run then held **288 decisions
+each second**.
 
-| | Decisions per second |
+| Condition | Decisions each second |
 |---|---|
-| Measured in the notebook, before restart | 62 |
-| Measured in a clean process, before restart | 169 |
-| Actual, after restart | **288** |
+| In the notebook, before the restart | 62 |
+| In a clean process, before the restart | 169 |
+| The real run, after the restart | **288** |
 
-Two consequences:
+Two results follow.
 
-1. **The restart was worth more than any hyperparameter chosen here.** It multiplied
-   the training budget by between 1.7 and 4.6 times for two minutes of work.
-2. **The ceiling design absorbed the error.** At 288 decisions per second the earlier
-   plan of `EPISODES = 8000` would have finished at about 04:30 and left the machine
-   idle for two hours. The ceiling of 20,000 was reached at 38%, so the clock decided
-   the run length, which is what it was set up to do.
+1. **The restart gave more than any setting on the README.** It multiplied the training budget
+   by between 1.7 and 4.6 times, for two minutes of work.
+2. **The design of the limit absorbed the error.** At 288 decisions each second, an earlier
+   plan of 8000 games would have finished at about 04:30, and the computer would have stood
+   idle for two hours. The run used 38% of the 20000 limit, so the clock decided the length.
 
-The general lesson: measure the machine in the state it will actually run in. A
-benchmark taken on a machine under memory pressure measures the pressure, not the
-workload.
+**The general lesson: measure the computer in the condition in which it will run.** A
+measurement taken on a computer with a full memory store measures the full memory store, not
+the work.
 
 ---
 
 ## 8. What the gameplay showed, and how the limitation changed
 
-The score data describes how much the agent scores. It does not describe what the agent does.
-Two questions needed the gameplay watched. Both are now answered, and the answer reversed the
-limitation I had written.
+The measurements above show how much the agent scores. They do not show what it does. Two
+questions needed the gameplay examined. Both are now answered, and the answer reversed the
+limitation.
 
 ### Method
 
-The GIFs are 75 frames of the first 20 seconds of game time. Two things were read from them
-directly, frame by frame, rather than judged by eye.
+Each animation holds 75 pictures of the first 20 seconds of a game. Two things were read from
+the pictures directly, not judged by eye.
 
-1. **Frightened ghosts.** An edible ghost is drawn in `RGB(66,114,194)`, a colour that
-   appears nowhere else in the palette. One ghost covers about 58 pixels, so the pixel count
-   gives the number of frightened ghosts on screen.
-2. **The score.** The on-screen score sits at rows 185 to 195. Digit templates were built
-   from one GIF whose score sequence was read by eye, then matched against every frame of the
-   others. A pellet pays 10, a power pellet 50, and the four ghosts in one chain pay 200,
-   400, 800 and 1600.
+1. **Edible ghosts.** An edible ghost uses the colour `RGB(66,114,194)`. That colour appears
+   nowhere else in the animation. One ghost covers about 58 pixels. The count of those pixels
+   therefore gives the number of edible ghosts on the screen.
+2. **The score.** The score sits at the bottom of each picture. Number shapes were taken from
+   one animation whose score was read by eye. Those shapes were then matched against every
+   picture of the others.
+
+A pellet pays 10 points. A power pellet pays 50. The four ghosts in one chain pay 200, 400,
+800 and 1600.
 
 ### The agent learned to eat power pellets
 
-`RGB(66,114,194)` never appears in the untrained game or in the game after 25 episodes. It
-appears in 41 of 75 frames after 7,625 episodes. Across all 306 demonstration games:
+The colour `RGB(66,114,194)` never appears in the untrained game. It never appears in the game
+after 25 games. It appears in 41 of the 75 pictures after 7625 games.
 
-| Episodes | Demos showing a frightened ghost | Mean frames frightened, of 75 |
+Across all 306 recorded games:
+
+| Games | Recorded games with an edible ghost | Average pictures with an edible ghost, of 75 |
 |---|---|---|
 | 1 – 500 | 5% | 1.3 |
 | 501 – 1500 | 50% | 12.6 |
@@ -200,25 +207,28 @@ appears in 41 of 75 frames after 7,625 episodes. Across all 306 demonstration ga
 | 4501 – 6000 | 100% | 37.8 |
 | 6001 – 7625 | 98% | 38.5 |
 
-The first demonstration containing a frightened ghost is episode 125. By episode 4500 the
-agent takes a power pellet within the first 20 seconds of every game.
+The first recorded game with an edible ghost is game 125.
 
 ### The agent eats ghosts
 
-The score confirms it. In `final_best.gif` the score goes 140 to 190, a gain of 50, on the
-exact frame the ghosts turn blue: a power pellet. It later goes 320 to 530, a gain of 210,
-and 670 to 1070, a gain of 400. In `episode_7625.gif` the same pattern appears: 150 to 210
-when the ghosts turn blue, then 520 to 770 and 770 to 1180.
+The score proves it.
 
-The 200 followed by 400 is the doubling that only occurs when two ghosts are eaten inside one
-power-pellet window.
+In the best test game the score goes from 140 to 190. That rise of 50 happens in the exact
+picture in which the ghosts become edible. It is a power pellet. The score later goes from 320
+to 530, a rise of 210. It then goes from 670 to 1070, a rise of 400.
 
-### The agent never finishes a chain
+The same pattern appears in the game recorded after 7625 games: 150 to 210 when the ghosts
+become edible, then 520 to 770, then 770 to 1180.
 
-This is the finding that matters. Every ghost-sized score jump in the last 12 demonstration
+A rise of 200 followed by a rise of 400 happens only when the agent eats two ghosts after one
+power pellet.
+
+### The agent never eats more than two
+
+This is the finding that matters. These are all the ghost-sized rises in the last 12 recorded
 games:
 
-| Episode | Ghost-sized jumps |
+| Game | Rises caused by a ghost |
 |---|---|
 | 7350 | 200 |
 | 7375 | 200, 400 |
@@ -233,79 +243,89 @@ games:
 | 7600 | 200, 200 |
 | 7625 | 200, 400 |
 
-There is no 800 and no 1600 anywhere. The agent takes one or two ghosts and stops. Where two
-200s appear, they come from two separate power pellets with one ghost each, because the chain
-resets between windows.
+There is no 800 and no 1600 at any point. The agent eats one ghost, sometimes two, then stops.
+
+Two rises of 200 come from two separate power pellets, with one ghost each. The doubling
+starts again after each power pellet.
 
 ### Why this is the reward clipping, measured
 
-The training loop sends the same reward to two places, and they are not the same number:
+The training loop sends the same number to two places. They are not the same number.
 
 ```python
 next_obs, reward, ended, truncated, _ = train_env.step(action)
-replay.add(obs, action, reward, ...)   # clipped to [-1, 1] inside add()
-score += reward                        # raw, never clipped
+replay.add(obs, action, reward, ...)   # this copy is cut to 1
+score += reward                        # this copy keeps its true size
 ```
 
-The four ghosts in a chain pay 200, 400, 800 and 1600 game points. After clipping each is
-worth exactly 1 to the network, the same as one 10-point pellet.
+The four ghosts in a chain pay 200, 400, 800 and 1600 game points. After clipping, each is
+worth exactly 1 to the network. One 10-point pellet is also worth 1.
 
-Now price the actual decision. Two ghosts remain and both are across the maze. The trip costs
-about 20 decisions, in which the agent could instead eat about 5 pellets.
+Now price the real choice. Two ghosts remain, and both are far away. The journey costs about 20
+decisions. In those decisions the agent could eat about five pellets instead.
 
-| | Chase the last two ghosts | Eat 5 nearby pellets | Better choice |
+| | Chase the two ghosts | Eat five pellets | Better choice |
 |---|---|---|---|
 | Game points | 2400 | 50 | Chase, by 48 times |
-| Clipped training reward | 2 | 5 | Eat pellets, by 2.5 times |
+| Training reward | 2 | 5 | Eat pellets, by 2.5 times |
 
-**Clipping does not flatten the incentive, it reverses it.** Under the reward function the
-agent was trained on, abandoning the chain is correct play. The agent is optimal for the
-objective it was given, and that objective disagrees with the one it is graded on:
+**Clipping does not reduce the reason to chase. It reverses it.** Under the signal the agent
+received, leaving the chain is correct play.
 
-- The agent maximises the discounted count of scoring events, `sum of gamma^t * r_clipped`.
-- The leaderboard measures the sum of raw game points, `sum of r_raw`.
+The agent is correct for the instructions it was given. Those instructions disagree with the
+measure used to grade it.
 
-These have different optima. A full chain is worth 3000 points. The agent collects 200 to 600.
+- The agent increases the count of scoring events.
+- The class list measures the sum of game points.
 
-This is an objective mismatch rather than a training failure, and it is the inverse of the
-usual specification-gaming story. The agent did not find a loophole to score absurdly high. It
-was told that a 1600-point ghost and a 10-point pellet are the same thing, it believed that,
-and it plays an orderly pellet game while leaving 2,400 points on the board.
+These two aims have different best answers. A full chain is worth 3000 points. The agent
+collects 200 to 600.
 
-**The limitation I first wrote was wrong.** I wrote that the agent has no reason to learn the
-high-scoring strategy, and would not eat power pellets or hunt ghosts. It does both. The
-correct statement is narrower and better evidenced: clipping does not stop the agent eating
-ghosts, it stops the agent finishing the chain. Eating a nearby ghost is cheap and pays 1.
-Finishing a chain is expensive and also pays 1.
+This is a disagreement between two aims, not a failure to learn. It is also the opposite of the
+usual story. The agent did not find a trick to score absurdly high. It was told that a
+1600-point ghost and a 10-point pellet are the same thing. It believed that. It now plays a
+tidy pellet game, and it does not collect 2400 points that are available.
 
-This is a better limitation than the one I predicted, because it was measured from the
-gameplay rather than argued from the source code.
+**The limitation written before the run was wrong.** It said the agent has no reason to eat
+power pellets or chase ghosts, and would do neither. It does both. The correct statement is
+narrower, and the evidence supports it: clipping does not stop the agent from eating ghosts, it
+stops the agent from finishing the chain. A ghost nearby is cheap, and pays 1. A full chain is
+expensive, and also pays 1.
 
-## 9. The next experiment, and how it would be judged
+This is a better limitation than the one predicted, because the gameplay produced it. The first
+one came from reading the code.
 
-**Replace the reward clipping with a transform that preserves the order of the
-rewards, such as `sign(r) * sqrt(|r|)`. Change that one setting only.**
+---
 
-Section 8 measured the ceiling this would lift. Under clipping, the four ghosts in a chain
-and a single pellet are all worth 1, and the agent responds by taking one or two ghosts and
-leaving 2,400 points on the board. A square-root transform keeps large rewards bounded enough
-for stable training, but a 1600-point ghost is then worth 40 units against 3.2 for a pellet.
-Finishing a chain becomes worth the trip.
+## 9. The next experiment, and how to judge it
 
-**How I would know I was wrong.** If the trained agent still produces no 800 or 1600 score
-jump, the reward transform is not the limit, and the exploration schedule is the next suspect.
+**Replace reward clipping with a rule that keeps the order of the rewards. Change that one
+setting only.**
 
-### The alternative, if the change must be one of the three named settings
+Section 8 measured the gain this would release. Under clipping, the four ghosts in a chain and
+one pellet are all worth 1. The agent answers by taking one or two ghosts, and it does not
+collect 2400 points.
 
-**Replace the constant exploration rate with a decay from 1.0 to 0.05 across the
-first half of training.**
+A square-root rule keeps large rewards small enough for safe training. A 1600-point ghost is
+then worth 40 units, against 3.2 for a pellet. Finishing a chain becomes worth the journey.
 
-Exploration stayed at a flat 15% to the last episode. With 25% sticky actions on top,
-a large share of moves late in training were not what the policy chose. A plateau that
-arrives while roughly one move in seven is still random is the pattern a decay
-schedule addresses: broad data early, clean on-policy data late, at no extra compute.
+This is not a new idea. Two well-known systems, Ape-X and R2D2, use this rule for this exact
+purpose. The standard form is `h(x) = sign(x)(sqrt(|x| + 1) - 1) + ex`.
 
-**How I would know I was wrong.** Run the same six hours with a decay schedule. If the
-score plateaus at the same level and at a similar episode count, the limit is the
-reward structure, not the exploration schedule. The next change would then be to the
-reward clipping rather than to exploration.
+**How to know the answer is wrong.** If the trained agent still shows no rise of 800 or 1600,
+then the reward rule is not the limit. The exploration rate is the next thing to examine.
+
+### An alternative, if the change must be one of the three required settings
+
+**Reduce the exploration rate during the run, from 1.0 to 0.05 across the first half.**
+
+The rate stayed at 15% until the last game. The game also ignores one move in four. A large
+share of late moves were therefore not the agent's choice.
+
+The score rise per group fell from +222 early to +31 at the end. The recorded games were level
+at about 2190 across the last 2600 games. A limit that arrives while one move in seven is still
+random is the problem this change addresses.
+
+**How to know the answer is wrong.** Run the same six hours with the new rate. If the score
+stops rising at the same level, and after a similar number of games, then the limit is the
+reward, and not the exploration rate.
