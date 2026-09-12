@@ -98,7 +98,7 @@ Source: `results/comparison.json`.
 ## 4. The agent never reaches the time limit
 
 No game reached the limit of 3000 decisions. This is true of the 5 games before training, the
-5 games after training, and all 306 games recorded during training.
+5 games after training, and all 305 games recorded during training.
 
 The longest game after training used 1018 of the 3000 decisions. That is about one third.
 
@@ -207,7 +207,7 @@ A pellet pays 10 points. A power pellet pays 50. The four ghosts in one chain pa
 The colour `RGB(66,114,194)` never appears in the untrained game. It never appears in the game
 after 25 games. It appears in 41 of the 75 pictures after 7625 games.
 
-Across all 306 recorded games:
+Across the 305 games recorded during training, one every 25 games:
 
 | Games | Recorded games with an edible ghost | Average pictures with an edible ghost, of 75 |
 |---|---|---|

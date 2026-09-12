@@ -362,8 +362,8 @@ both things, not one of them.
 ### The agent still dies in every game
 
 No test game reached the 3000-decision limit, before training or after. The longest game after
-training used 1018 decisions of the 3000 allowed. Of the 306 games recorded during training,
-not one reached the limit.
+training used 1018 decisions of the 3000 allowed. Of the 305 games recorded during
+training, not one reached the limit.
 
 Every game ends because a ghost catches the agent. Avoiding ghosts is therefore the limit on
 the score.
