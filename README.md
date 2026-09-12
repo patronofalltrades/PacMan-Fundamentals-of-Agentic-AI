@@ -21,6 +21,7 @@ what the agent learned, and how to reproduce it.
 | `results/training.csv` | One row for each of the 7,628 completed games |
 | `results/training_summary.json` | Status, episodes, decisions, learning updates, elapsed time |
 | `results/demo_scores.json` | Score and length of every demonstration game |
+| `FINDINGS.md` | Findings and observations: what the evidence supports, and what it does not |
 | `stop_training_at.sh` | Ends the training loop at a set clock time. See "How the run was controlled" |
 
 Model checkpoints are not in this repository. Each checkpoint is 6.76 MB and a run writes
@@ -250,6 +251,9 @@ The run was stopped by one interrupt at a set clock time, not by exhausting the 
 ceiling. This is a disclosed limitation, not a failure. The notebook catches the interrupt,
 records the status as `interrupted`, and saves the model, metrics and plot before the
 evaluation runs.
+
+A longer analysis, including why the loss never fell and why the machine mattered more than
+the settings, is in [FINDINGS.md](FINDINGS.md).
 
 Full records: [config.json](results/config.json) ·
 [training.csv](results/training.csv) ·

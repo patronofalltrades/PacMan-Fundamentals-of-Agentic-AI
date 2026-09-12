@@ -14,3 +14,6 @@ docs/ai-log/.state.json
 
 # run logs and notebook backups from the unattended runner
 logs/
+
+# local scratch
+gif_compare.html
