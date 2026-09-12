@@ -1,32 +1,181 @@
 # Ms. Pac-Man DQN — Fundamentals of Agentic AI, Class 3
 
-A Deep Q-Network trained to play Ms. Pac-Man, built on the class notebook from
+A Deep Q-Network trained to play Ms. Pac-Man. Built on the class notebook from
 [pepealonso95/pacman-dqn](https://github.com/pepealonso95/pacman-dqn).
 
-This repository is the single deliverable for the assignment. It holds the executed
-notebook, the evidence from the training run, and the written explanation. A grader
-should be able to read this README alone and understand what was run, what the agent
-learned, and how to reproduce it.
+This repository is the single deliverable. It holds the executed notebook, the evidence
+from one training run, and the explanation. Read this README alone to understand what ran,
+what the agent learned, and how to reproduce it.
+
+**Notebook:** [pacman_dqn.ipynb](pacman_dqn.ipynb) — saved with all outputs from the final run.
 
 ## About this repository
 
-| Item | Status | What it is |
-|---|---|---|
-| `pacman_dqn.ipynb` | pending the final run | The executed notebook, saved with all cell outputs from the final training and evaluation run |
-| `results/comparison.json` | pending the final run | All five before scores and all five after scores, on seeds 101, 202, 303, 404, 505 |
-| `results/training_dashboard.png` | pending the final run | Score, loss, and exploration curves for the run |
-| `results/demos/` | pending the final run | Untrained gameplay GIF, best trained gameplay GIF, and the intermediate GIFs |
-| `results/config.json`, `training.csv`, `training_summary.json` | pending the final run | Settings, hardware and package versions, and per-episode metrics |
-| Assignment objectives | below | The course brief, restated |
-| Glossary | below | Every term used in this repository, with its name in the notebook code |
+| Path | What it holds |
+|---|---|
+| `pacman_dqn.ipynb` | The executed notebook. All cell outputs from the final run are visible |
+| `results/comparison.json` | Five before scores and five after scores, on seeds 101, 202, 303, 404, 505 |
+| `results/training_dashboard.png` | Score, loss, and exploration curves |
+| `results/demos/` | Untrained GIF, best trained GIF, and the intermediate GIFs |
+| `results/config.json` | Settings, hardware, and package versions |
+| `results/training.csv` | One row per completed game |
+| `results/training_summary.json` | Status, episodes, decisions, learning updates, elapsed time |
+| `stop_training_at.sh` | Ends the training loop at a set clock time. See "How the run was controlled" |
 
-**What is not in this repository.** Model checkpoints are large. Each one is 6.76 MB,
-and a run writes many of them. They stay in the local run ZIP, and this README records
-where that ZIP is kept.
+Model checkpoints are not in this repository. Each checkpoint is 6.76 MB and a run writes
+many. They stay in the local run ZIP. The last section gives its location.
 
-The full reasoning for each setting is a separate working document. This README carries
-the glossary from it, so that the terms below have one fixed meaning everywhere in the
-repository.
+## How to open and run it
+
+**Local, macOS or Linux:**
+
+```sh
+git clone https://github.com/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI.git
+cd PacMan-Fundamentals-of-Agentic-AI
+uv venv --python 3.13 .venv          # or: python3.13 -m venv .venv
+VIRTUAL_ENV=.venv uv pip install -r requirements.txt ipykernel
+.venv/bin/python -m jupyter lab pacman_dqn.ipynb
+```
+
+Select the `.venv` kernel. Choose Run All. The notebook detects CUDA, Apple Metal (MPS),
+or CPU automatically.
+
+**Google Colab:** open the notebook. Choose Runtime → Change runtime type → T4 GPU.
+Choose Runtime → Run all. The first cell installs the packages.
+
+## My settings and why
+
+| Setting | Notebook default | My value | Reason |
+|---|---|---|---|
+| `EXPLORATION` | 0.20 | **0.15** | The midpoint between the notebook default and the 0.10 I first argued for. I changed four settings at once, so I held this one near the default to limit how much moved. This is my weakest argument. I did not test it |
+| `EPISODES` | 100 | **20000** | A ceiling, not a target. The run ends at a clock time, not at an episode count. See below |
+| `LEARNING_RATE` | 0.0001 | **0.0001** | Unchanged. The standard Adam value for DQN. A long run needs stability across many updates more than early speed. 0.00025 is the RMSProp value from the original paper, and learning rates do not transfer between optimisers |
+
+**Other settings I changed.**
+
+| Setting | Notebook default | My value | Reason |
+|---|---|---|---|
+| `REPLAY_CAPACITY` | 5000 | **50000** | 5,000 transitions is about eight recent games. Every batch then comes from a narrow, correlated window, and the agent forgets early experience within minutes. This run collects millions of transitions, so 5,000 keeps far less than 1% of it. Measured cost: 1.7 GB of RAM and under 3% of throughput |
+| `SHOW_POPUPS` | True | **False** | Stops a Tk window opening during an unattended overnight run. GIFs are still recorded and saved. Display only. No effect on learning |
+
+**Settings I did not change.** The evaluation is untouched, so this result compares with the
+rest of the class. Evaluation uses the same five seeds (101, 202, 303, 404, 505), 5%
+exploration, and the same 3,000-decision cap, before and after training. The baseline is an
+untrained network, not a random-action agent.
+
+### Why the episode budget is a ceiling
+
+Throughput on this machine measures between 62 and 169 decisions per second. That is a
+spread of 2.7 times. A random agent plays 464 decisions per game, and games lengthen as the
+agent improves. No episode count therefore produces a run of known length.
+
+I fixed the length instead. `EPISODES = 20000` cannot be reached at either rate. The run
+starts at 00:00 and a script sends one interrupt at 06:00. The notebook catches that
+interrupt, records the status as `interrupted`, and saves the model, metrics, and plot.
+A higher ceiling costs nothing: checkpoints scale with episodes reached, not with the ceiling.
+
+An earlier plan used `EPISODES = 8000`. At the fast measured rate that budget completes in
+6.3 hours, so the run could end before morning and leave the machine idle. I raised it.
+
+## How the run was controlled
+
+```sh
+.venv/bin/python -m jupyter lab pacman_dqn.ipynb   # then Run All at 00:00
+./stop_training_at.sh 06:00                        # in a second terminal
+```
+
+[`stop_training_at.sh`](stop_training_at.sh) finds the notebook kernel, keeps the Mac awake,
+waits until 06:00, and sends one interrupt. It sends nothing if `training_summary.json`
+already exists, because that file means training has ended and an interrupt would then
+break the evaluation.
+
+## What I expected, and what happened
+
+**Recorded on 11 September 2026, before the run started.**
+
+I expect the mean score to rise above the 492 baseline. I expect a wide spread across the
+five seeds, and at least one seed that does not improve. I expect the agent to move toward
+pellets and clear corridors. I do not expect it to hunt ghosts, for the reason in
+"One limitation". Loss may fall while the score does not rise.
+
+**What I observed:** _pending the run._
+
+## Results
+
+_Pending the run. This section is filled from the actual outputs._
+
+### Five evaluation games, before and after
+
+| Game | Seed | Before (untrained) | After (trained) |
+|---|---|---|---|
+| 1 | 101 | 350 | _pending_ |
+| 2 | 202 | 500 | _pending_ |
+| 3 | 303 | 320 | _pending_ |
+| 4 | 404 | 800 | _pending_ |
+| 5 | 505 | 490 | _pending_ |
+| **Mean** | | **492** | _pending_ |
+
+The before scores are fixed. The notebook calls `torch.manual_seed(42)` immediately before
+it builds the network, so the untrained weights are identical on every run. Full data:
+[comparison.json](results/comparison.json).
+
+### Training dashboard
+
+_Pending the run._ Raw score per game, mean update loss, and training exploration.
+A falling loss is not evidence of better play. Read the score panel, not the loss panel.
+
+### Gameplay
+
+_Pending the run._ Untrained GIF, best trained GIF, and the intermediate GIFs.
+Each GIF plays at 4x speed and shows the first 20 seconds of game time.
+The trained GIF is the best of five evaluation games, selected by full-game score.
+
+### What the run cost
+
+| | |
+|---|---|
+| Status | _pending_ |
+| Completed episodes | _pending_ |
+| Total decisions | _pending_ |
+| Learning updates | _pending_ |
+| Elapsed time | _pending_ |
+| Hardware | Apple M5, MPS |
+| Software | Python 3.13.15, torch 2.14.0, gymnasium 1.3.0, ale-py 0.11.2, macOS 26.4.1 arm64 |
+
+## How the agent learns, in plain language
+
+**What it observes.** The game screen becomes grayscale and shrinks to 84 x 84 pixels. The
+agent sees the last four of these screens stacked together. One screen does not show
+direction or speed. Four screens do. One agent decision covers four emulator frames, so the
+four screens span 16 frames.
+
+**What it can do.** The agent picks one of nine joystick moves: no move, up, down, left,
+right, and the four diagonals. One move in four repeats the previous move instead of the
+chosen one. That is the sticky-action setting, and it makes the game less predictable.
+
+**How it is rewarded.** Game points supply the reward. Pellets, power pellets, ghosts, and
+fruit all score. During training every reward is clipped to the range -1 to 1, so every
+scoring event counts as 1. All reported scores are raw game points.
+
+**How it learns.** A convolutional network reads the four screens and predicts one value per
+move. The agent stores each experience in a replay memory. Every four decisions it samples
+32 past experiences and moves its prediction toward the reward plus 99% of the best value it
+expects next. A second, slowly updated copy of the network supplies that expected next value.
+That copy keeps the target from moving as fast as the learner.
+
+## One limitation
+
+Training rewards are clipped to the range -1 to 1. A pellet scores 10 points and a ghost
+scores 200 to 1,600 points. After clipping, both count as 1. The agent therefore learns to
+maximise the number of scoring events, not their value. It has no reason to learn the
+high-scoring strategy of the game, which is to eat a power pellet and then hunt ghosts.
+
+## One next experiment
+
+Replace the constant exploration rate with a decay from 1.0 to 0.05 across the first half of
+training. Change that one setting only. The current run explores at a fixed 15% to the last
+episode, which slows early learning and adds noise to late learning. A decay gives broad data
+early and clean, on-policy data late. It costs no extra compute.
 
 ## Assignment objectives
 
@@ -108,7 +257,7 @@ The last column gives the name in the notebook code and the value that the noteb
 
 | Term | Meaning | In this notebook |
 |---|---|---|
-| Epsilon (ε) | The fraction of moves that the agent selects at random. It is a number between 0 and 1. Epsilon is the Greek letter that authors use for this value. | `EXPLORATION`, and the variable `epsilon`. I set 0.10 |
+| Epsilon (ε) | The fraction of moves that the agent selects at random. It is a number between 0 and 1. Epsilon is the Greek letter that authors use for this value. | `EXPLORATION`, and the variable `epsilon`. I set 0.15 |
 | Gamma (γ) | The discount factor. It sets how much a future reward counts against an immediate reward. A value of 0.99 means that the agent values the next step at 99% of this step. | `GAMMA = 0.99`. Unchanged |
 | Alpha (α) | The learning rate. Some authors use this letter. This notebook does not. | `LEARNING_RATE = 0.0001` |
 
@@ -130,7 +279,7 @@ The last column gives the name in the notebook code and the value that the noteb
 | Term | Meaning | In this notebook |
 |---|---|---|
 | Update | One change to the network weights. | One call to `learn()`. One update for every four decisions |
-| Experience replay | A store of past experience. The agent learns from random samples of the store, not from the current moment. Random samples remove the correlation between consecutive moments. | The class `ReplayMemory` |
+| Experience replay | A store of past experience. The agent learns from random samples of the store, not from the current moment. Random samples remove the correlation between consecutive moments. | The class `ReplayMemory`, capacity 50,000 |
 | Transition | One record in the replay memory. It holds the four screens, the move, the reward, the next screen, and the end flags. | One item in the deque |
 | Batch | The group of transitions in one update. | `BATCH_SIZE = 32` |
 | Warm-up | The first period of a run. The agent acts at random and makes no updates. It collects data first. | `WARMUP_STEPS = 1000` decisions |
@@ -172,3 +321,9 @@ The last column gives the name in the notebook code and the value that the noteb
 | Epoch | A complete pass through a fixed dataset. **This method has no epochs.** The data arrives while the agent plays. | Not used |
 | MPS | Metal Performance Shaders. The interface that PyTorch uses for the GPU on an Apple computer. | The selected device |
 
+
+## Where the large files are
+
+Model checkpoints are not committed. They are in the run ZIP, kept locally at
+`~/Fundamentals of Agentic AI/pacman-dqn/pacman_runs/`. The `results/` folder in this
+repository holds the published evidence: configuration, metrics, plot, GIFs, and comparison.
