@@ -112,7 +112,7 @@ Source: `results/training.csv`, `results/demo_scores.json`.
 
 ---
 
-## 6. The prediction was wrong in two ways
+## 6. The prediction was wrong in two ways, and a stated claim in a third
 
 The prediction was recorded before the run and committed to this repository before
 training started. Two parts of it failed.
@@ -127,6 +127,11 @@ training started. Two parts of it failed.
 Both failures were in the same direction: the run went better than expected. The
 second failure is the more interesting one, because it inverts the warning in the
 brief rather than confirming it. Section 2 explains why.
+
+A third thing written before the run also turned out to be wrong, though it was a
+claim rather than a prediction. The limitation stated that the agent would not learn
+to eat power pellets or hunt ghosts. It does both. Section 8 gives the measurement and
+the corrected limitation.
 
 ---
 
@@ -162,38 +167,112 @@ workload.
 
 ---
 
-## 8. What the numbers cannot settle
+## 8. What the gameplay showed, and how the limitation changed
 
-The measurements above describe how much the agent scores and how long it survives.
-They do not describe **what it does**. Two questions need the gameplay watched, not
-the data read.
+The score data describes how much the agent scores. It does not describe what the agent does.
+Two questions needed the gameplay watched. Both are now answered, and the answer reversed the
+limitation I had written.
 
-1. **Does the agent ever eat a power pellet and then hunt ghosts?** The limitation
-   argument says it has no reason to, because training rewards are clipped to the
-   range -1 to 1, so a 10-point pellet and a 1,600-point ghost both count as 1. The
-   score is consistent with that reading: 2.64 points per decision is about what
-   eating 10-point pellets produces, and a ghost chain would show a much higher rate.
-   But consistency is not proof. Watching settles it.
-2. **Does it avoid ghosts deliberately, or only incidentally?** A policy that flees
-   looks different from one that walks toward pellets and survives by luck.
+### Method
 
-### Observations from watching the gameplay
+The GIFs are 75 frames of the first 20 seconds of game time. Two things were read from them
+directly, frame by frame, rather than judged by eye.
 
-_To be completed after watching `results/demos/episode_0025.gif` against
-`results/demos/episode_7625.gif`._
+1. **Frightened ghosts.** An edible ghost is drawn in `RGB(66,114,194)`, a colour that
+   appears nowhere else in the palette. One ghost covers about 58 pixels, so the pixel count
+   gives the number of frightened ghosts on screen.
+2. **The score.** The on-screen score sits at rows 185 to 195. Digit templates were built
+   from one GIF whose score sequence was read by eye, then matched against every frame of the
+   others. A pellet pays 10, a power pellet 50, and the four ghosts in one chain pay 200,
+   400, 800 and 1600.
 
-- Movement:
-- Power pellets and ghosts:
-- Ghost avoidance:
-- Coverage of the maze:
-- How it dies:
+### The agent learned to eat power pellets
 
----
+`RGB(66,114,194)` never appears in the untrained game or in the game after 25 episodes. It
+appears in 41 of 75 frames after 7,625 episodes. Across all 306 demonstration games:
+
+| Episodes | Demos showing a frightened ghost | Mean frames frightened, of 75 |
+|---|---|---|
+| 1 – 500 | 5% | 1.3 |
+| 501 – 1500 | 50% | 12.6 |
+| 1501 – 3000 | 90% | 26.6 |
+| 3001 – 4500 | 98% | 36.5 |
+| 4501 – 6000 | 100% | 37.8 |
+| 6001 – 7625 | 98% | 38.5 |
+
+The first demonstration containing a frightened ghost is episode 125. By episode 4500 the
+agent takes a power pellet within the first 20 seconds of every game.
+
+### The agent eats ghosts
+
+The score confirms it. In `final_best.gif` the score goes 140 to 190, a gain of 50, on the
+exact frame the ghosts turn blue: a power pellet. It later goes 320 to 530, a gain of 210,
+and 670 to 1070, a gain of 400. In `episode_7625.gif` the same pattern appears: 150 to 210
+when the ghosts turn blue, then 520 to 770 and 770 to 1180.
+
+The 200 followed by 400 is the doubling that only occurs when two ghosts are eaten inside one
+power-pellet window.
+
+### The agent never finishes a chain
+
+This is the finding that matters. Every ghost-sized score jump in the last 12 demonstration
+games:
+
+| Episode | Ghost-sized jumps |
+|---|---|
+| 7350 | 200 |
+| 7375 | 200, 400 |
+| 7400 | 200 |
+| 7425 | none |
+| 7450 | 200 |
+| 7475 | 200, 400 |
+| 7500 | 200, 200 |
+| 7525 | 200, 200 |
+| 7550 | 200, 200 |
+| 7575 | 200, 400 |
+| 7600 | 200, 200 |
+| 7625 | 200, 400 |
+
+There is no 800 and no 1600 anywhere. The agent takes one or two ghosts and stops. Where two
+200s appear, they come from two separate power pellets with one ghost each, because the chain
+resets between windows.
+
+### Why this is the reward clipping, measured
+
+Training rewards are clipped to the range -1 to 1. The four ghosts in a chain pay 200, 400,
+800 and 1600 points, and after clipping each is worth exactly 1, the same as one 10-point
+pellet. Crossing the maze for the fourth ghost pays the agent what eating one adjacent pellet
+pays. The agent therefore takes whichever ghosts are nearby and ignores the rest.
+
+A full chain is worth 3000 points. The agent collects 200 to 600.
+
+**The limitation I first wrote was wrong.** I wrote that the agent has no reason to learn the
+high-scoring strategy, and would not eat power pellets or hunt ghosts. It does both. The
+correct statement is narrower and better evidenced: clipping does not stop the agent eating
+ghosts, it stops the agent finishing the chain. Eating a nearby ghost is cheap and pays 1.
+Finishing a chain is expensive and also pays 1.
+
+This is a better limitation than the one I predicted, because it was measured from the
+gameplay rather than argued from the source code.
 
 ## 9. The next experiment, and how it would be judged
 
+**Replace the reward clipping with a transform that preserves the order of the
+rewards, such as `sign(r) * sqrt(|r|)`. Change that one setting only.**
+
+Section 8 measured the ceiling this would lift. Under clipping, the four ghosts in a chain
+and a single pellet are all worth 1, and the agent responds by taking one or two ghosts and
+leaving 2,400 points on the board. A square-root transform keeps large rewards bounded enough
+for stable training, but a 1600-point ghost is then worth 40 units against 3.2 for a pellet.
+Finishing a chain becomes worth the trip.
+
+**How I would know I was wrong.** If the trained agent still produces no 800 or 1600 score
+jump, the reward transform is not the limit, and the exploration schedule is the next suspect.
+
+### The alternative, if the change must be one of the three named settings
+
 **Replace the constant exploration rate with a decay from 1.0 to 0.05 across the
-first half of training. Change that one setting only.**
+first half of training.**
 
 Exploration stayed at a flat 15% to the last episode. With 25% sticky actions on top,
 a large share of moves late in training were not what the policy chose. A plateau that

@@ -111,7 +111,9 @@ pellets and clear corridors. I do not expect it to hunt ghosts, for the reason i
 "One limitation". Loss may fall while the score does not rise.
 
 **What I observed.** The mean rose from 492 to **2578**, a gain of 2086 points. The agent
-moves toward pellets and clears corridors, and it survives 66% longer. Two parts of the
+moves toward pellets, clears corridors, and survives 66% longer. It also learned something I
+did not predict: it seeks power pellets and eats ghosts. It never finishes a ghost chain,
+which turns out to be the sharper limitation. See "One limitation". Two parts of the
 prediction were wrong. I expected at least one seed that did not improve, and **all five
 improved**. I expected the loss might fall while the score did not rise, and the opposite
 happened: the loss rose early and then stayed near 0.11 for the whole run, while the score
@@ -288,39 +290,60 @@ That copy keeps the target from moving as fast as the learner.
 
 ## One limitation
 
-**Training rewards are clipped to the range -1 to 1.** A pellet scores 10 points and a ghost
-scores 200 to 1,600 points. After clipping, both count as 1. The agent therefore learns to
-maximise the number of scoring events, not their value. It has no reason to learn the
-high-scoring strategy of the game, which is to eat a power pellet and then hunt ghosts.
+**Reward clipping does not stop the agent eating ghosts. It stops the agent finishing the
+chain.**
 
-This limitation comes from the code, in `ReplayMemory.add`, so it holds whatever the score
-is. The run is consistent with it. The trained agent scores 2.64 raw points per decision. A
-mean of 2578 points is about what clearing most of a level of 10-point pellets gives. A
-policy that hunted ghosts would show a much higher score per decision, because one ghost
-chain can pay 1,600 points in a few decisions.
+I expected to report that the agent never hunts ghosts. The gameplay shows the opposite, and
+the real limitation is sharper.
 
-**A second limitation, from the same evidence.** Losing a life gives no penalty and does not
-end the episode. The cost of dying is only the future pellets not eaten, which is a weak and
-delayed signal. Every one of the 5 evaluation games and all 305 demonstration games ended in
-death rather than at the 3,000-decision cap. The longest trained game used 1018 decisions of
-the 3000 allowed. Ghost avoidance is therefore the binding limit on the score, and it is the
-part the reward structure teaches least well.
+Training rewards are clipped to the range -1 to 1 in `ReplayMemory.add`. In Ms. Pac-Man the
+four ghosts eaten after one power pellet pay 200, 400, 800 and 1600 points, which is 3000
+points in total. After clipping, each of those four is worth exactly 1, and so is a single
+10-point pellet. Crossing the maze to reach the fourth ghost therefore pays the agent the
+same as eating one pellet next to it.
+
+The agent behaves exactly as that structure predicts.
+
+| Behaviour | Evidence |
+|---|---|
+| It learned to eat power pellets | Frightened ghosts appear in 5% of demonstration games before episode 500, and in 100% after episode 4500 |
+| It eats ghosts | Score jumps of 200, then 400, in the same power-pellet window |
+| It never finishes a chain | Across the last 12 demonstration games, every ghost-sized jump is 200 or 400. There is no 800 and no 1600 |
+
+So the agent takes the one or two ghosts that are convenient and ignores the rest. It
+collects 200 to 600 points from a power pellet that is worth 3000. It learned the cheap half
+of the strategy, because clipping is what made the expensive half worthless.
+
+Measured by reading the on-screen score directly from the gameplay GIFs, frame by frame.
+The method and the full numbers are in [FINDINGS.md](FINDINGS.md), section 8.
+
+**A second limitation.** Losing a life gives no penalty and does not end the episode, so the
+only cost of dying is the future pellets not eaten. That signal is weak and late. No game
+ever reached the 3,000-decision cap: not the 5 untrained games, not the 5 trained games, and
+not one of the 306 demonstration games. Every game ends in death.
 
 ## One next experiment
 
-**Replace the constant exploration rate with a decay from 1.0 to 0.05 across the first half
-of training.** Change that one setting only.
+**Replace the reward clipping with a transform that keeps the order of the rewards, such as
+`sign(r) * sqrt(|r|)`. Change that one setting only.**
 
-The run supports this more strongly than I expected. Exploration stayed at a flat 15% to the
-last episode, so roughly one move in seven was random even at episode 7,628, on top of the
-25% sticky actions. The score gain per segment fell from +222 early to +31 in the last
-segment, and the demonstration windows were level at about 2,190 across the final 2,600
-episodes. A plateau that arrives while a sixth of the moves are still random is the pattern a
-decay schedule addresses: broad data early, and clean on-policy data late. It costs no extra
-compute.
+This is the experiment the gameplay points to. Clipping makes all four ghosts in a chain
+worth the same as one pellet, and the agent responds by taking one or two and leaving the
+rest. A square-root transform keeps large rewards bounded enough to stay stable, but a
+1600-point ghost is then worth 40 units against 3.2 for a pellet, so finishing a chain is
+worth pursuing. The measured ceiling this would lift is large: the agent currently collects
+200 to 600 points from a power pellet worth 3000.
 
-I would know this was wrong if a decayed run reached the same plateau at the same episode
-count. That would mean the limit is the reward structure, not the exploration schedule.
+**How I would know I was wrong.** If the trained agent still shows no 800 or 1600 score jump,
+the limit is not the reward transform. The next suspect would then be the exploration
+schedule.
+
+**The alternative, if the grader prefers a change to one of the three named settings.**
+Replace the constant exploration rate with a decay from 1.0 to 0.05 across the first half of
+training. Exploration stayed at a flat 15% to the last episode, with 25% sticky actions on
+top. The score gain per segment fell from +222 early to +31 at the end, and the
+demonstration score was level at about 2,190 across the final 2,600 episodes. A plateau that
+arrives while one move in seven is still random is the pattern a decay schedule addresses.
 
 ## Assignment objectives
 
