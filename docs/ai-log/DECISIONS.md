@@ -176,3 +176,61 @@ the run starts.
 
 **Produced.** Edited `pacman_dqn.ipynb` (five values, three cells, nothing else) and
 `stop_training_at.sh`.
+
+---
+
+## 2026-09-13 · Run 2, the controlled experiment on the reward rule
+
+**Decided.** Run the experiment notebook `pacman_dqn_rescaled.ipynb` from 01:00 to 07:00
+on 13 September. One variable changes against run 1. The reward rule becomes
+`sign(r) * (sqrt(|r| + 1) - 1) + 0.001r` in place of `clip(r, -1, 1)`. Every other
+setting holds at the run 1 value: `EXPLORATION = 0.15`, `EPISODES = 20000`,
+`LEARNING_RATE = 0.0001`, `REPLAY_CAPACITY = 50000`, `DEMO_EVERY = 25`,
+`SHOW_POPUPS = False`, training seed 42. The evaluation settings are untouched:
+seeds 101/202/303/404/505, 5% exploration, and a 3,000-decision cap.
+
+**Why this variable.** Clipping makes every scoring event worth the same. A 1600-point
+ghost and a 10-point pellet both become 1. The agent therefore cannot learn that a chain
+of ghosts is worth more than a line of pellets. The square-root transform holds the
+magnitudes low enough to train, but it keeps the order of the rewards. The small linear
+term `0.001r` stops two large rewards from becoming equal after the square root.
+
+**Alternatives considered.** A second run at the same settings, to measure the spread
+between runs (rejected: it tests no idea, and the five evaluation seeds already give a
+measure of spread); changing the exploration schedule instead (not selected: it is the
+next experiment, and two changed variables in one run explain nothing); removing the
+reward transform completely (rejected: unbounded rewards make the training unstable,
+which is the reason clipping exists).
+
+**Prediction, recorded before the run starts.** The baseline to beat is the run 1 result
+of **2578**, and the run 1 spread across the five seeds was **1060**, from 2050 to 3110.
+
+1. The average score after training is above 3110. That is above every run 1 seed, not
+   only above the run 1 average.
+2. The demonstration GIFs show scores of 800 and 1600 in one life. That is the agent
+   eating a second and a third ghost after one power pellet.
+3. The prediction error is larger than the 0.10 to 0.14 band of run 1, because the
+   targets are no longer held between -1 and 1. It still does not fall as the play
+   improves, for the reason given in `FINDINGS.md` section 2.
+4. The rate stays near the 288 decisions per second of run 1. The transform adds one
+   arithmetic operation for each decision.
+
+**How the prediction can fail.** If the average after training falls inside the run 1
+spread of 2050 to 3110, the change is within noise. The conclusion is then that the
+reward scale was not the limit, and the exploration schedule is the better candidate.
+Report that outcome in full. Do not report it as a smaller success.
+
+**Machine conditions.** The Mac was restarted at 00:44. macOS reopened 21 applications on
+login, and the load average was above 110. Chrome, Spotify, Zoom, Xcode, ChatGPT, Grok Bot
+and the Claude application were closed. The load fell to 18. `cmux` stays open, because
+the Claude Code session runs inside it. Run 1 measured 288 decisions per second on a quiet
+machine, so run 2 needs the same conditions to be comparable. Free disk is 40 GiB. The run
+needs about 3.7 GB.
+
+**The window moved by one hour.** The plan was 00:00 to 06:00, the same clock as run 1.
+The restart finished at 00:44, so that window had passed. The new window is 01:00 to 07:00.
+The length is six hours in both runs. The length is the controlled variable. The time of
+day is not.
+
+**Produced.** Started `scripts/run_overnight.sh 01:00 07:00 pacman_dqn_rescaled.ipynb`
+at 00:48, detached. The log is `logs/overnight_20260913_004801.log`.
