@@ -289,3 +289,58 @@ is a stronger write-up than one run, because the idea was tested and it was wron
 
 **Produced.** `results2/`, `scripts/matched_eval.py`, and
 `results2/matched_eval.json`.
+
+---
+
+## 2026-09-13 · Run 3, the exploration experiment
+
+**Decided.** Run `pacman_dqn_explore.ipynb` from 10:30 to 16:30 on 13 September.
+`EXPLORATION` changes from 0.15 to 0.10. Everything else holds at the run 1 value,
+**including the reward rule**, which returns to `clip(r, -1, 1)`. The evaluation settings
+stay fixed: seeds 101/202/303/404/505, 5% exploration, and a 3,000-decision cap.
+
+**Built from run 1, not from run 2.** The notebook is a copy of `pacman_dqn.ipynb` with the
+outputs removed and exactly one line changed, from `EXPLORATION = 0.15` to
+`EXPLORATION = 0.10`. This was checked: the copy contains `np.clip(reward, -1, 1)` and
+contains no square-root transform.
+
+**Alternatives considered.** Keeping the square-root transform and changing exploration as
+well (rejected: run 3 would then differ from run 1 by two variables, and could only be
+compared with the weaker 2298 result of run 2; the transform already failed its own test,
+so carrying it forward tests nothing); a decaying exploration rate (rejected: it adds a
+schedule shape as a second new variable, and the notebook uses one constant rate after the
+warm-up, so a constant is the smaller change); 0.05 to match the evaluation exactly
+(not selected: the gap from 0.15 would be large, and a result could not be attributed to
+the size of the step).
+
+**Why this variable.** Exploration is constant after the warm-up:
+`epsilon = 1.0 if total_steps < WARMUP_STEPS else EXPLORATION`. At 0.15, about one decision
+in seven is random. In this game a random move beside a ghost often ends a life. The agent
+is also tested at 0.05, so it is trained under noisier conditions than it is measured under.
+Lowering the rate to 0.10 reduces that mismatch. `REASONING.md` recommended 0.10 originally,
+and 0.15 was chosen as a midpoint, so this run tests the value that the reasoning preferred.
+
+**Prediction, recorded before the run starts.** The baseline to beat is the run 1 result of
+**2578**, with a spread across the five seeds of **1060**.
+
+1. The average after six hours is higher than 2578, and lands between 2600 and 3100.
+2. That improvement is **smaller than the spread**, so the correct report will again be
+   "no evidence of a difference", not "an improvement". State it that way.
+3. The matched-episode test is the more sensitive measure. At 7,625 episodes, run 3 scores
+   above the run 1 value of 2302.
+4. Run 3 completes **fewer** episodes than run 1's 7,628 in the same six hours. Better play
+   means longer games, so the decision count per game rises while the rate stays near 330
+   decisions per second.
+
+**How the prediction can fail.** Less exploration can also lock the agent into a routine it
+found early, so it never discovers the power pellet chains. If that happens the average
+falls below 2578 and the share of episodes scoring 3000 or more drops below the 3.3% of
+run 1. That outcome would say the exploration rate is not the limit either, and the next
+candidate becomes the network update rule or the length of training.
+
+**Prediction 2 is the important one.** Two runs have now produced differences smaller than
+the spread. If run 3 does the same, the finding is not about any single setting. It is that
+five evaluation games cannot resolve differences of this size, and that is a statement
+about the method, which is worth more than a tuning result.
+
+**Produced.** `pacman_dqn_explore.ipynb`.
