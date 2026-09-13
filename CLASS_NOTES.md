@@ -81,10 +81,11 @@ decisions, or about five pellets.
 ## What I would change next
 
 Replace clipping with a square-root rule. It keeps big rewards bigger than small ones, but
-still small enough to train safely. A 1600-point ghost becomes worth about 12 pellets instead
-of 1.
+still small enough to train safely. A 1600-point ghost becomes worth about 17 pellets instead
+of 1. The true ratio is 160, so the rule restores the order without restoring the full size.
 
-This is not my invention. Ape-X and R2D2 do exactly this.
+Ape-X and R2D2 use the same function, but they apply it to the predicted value rather than to
+the reward. Applying it to the reward is the simpler version of the same idea.
 
 **How I would know I was wrong:** run it again, and if there is still no +800 or +1600, the
 reward is not the limit. Exploration would be the next suspect.

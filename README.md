@@ -637,17 +637,20 @@ Compare the three ways to treat the same four rewards:
 
 | Reward | Game points | After clipping, now | After the square-root rule |
 |---|---|---|---|
-| One pellet | 10 | 1 | 3.2 |
-| First ghost | 200 | 1 | 14.2 |
-| Fourth ghost | 1600 | 1 | 40.0 |
+| One pellet | 10 | 1 | 2.33 |
+| First ghost | 200 | 1 | 13.38 |
+| Fourth ghost | 1600 | 1 | 40.61 |
 
 Clipping makes the fourth ghost equal to one pellet. The square-root rule makes it worth about
-12 pellets. That is still less than the true 160 pellets, and that is the point: the numbers
+17 pellets. That is still far below the true 160 pellets, and that is the point: the numbers
 stay small enough for safe training, but the order survives. Finishing a chain then becomes
 worth the journey.
 
-This is not a new idea. Two well-known systems, Ape-X and R2D2, use this rule for this exact
-purpose.
+**Where this rule comes from.** Two well-known systems, Ape-X and R2D2, use this same function
+to avoid reward clipping. They apply it to the value the network predicts, not to the reward
+itself, which needs the reverse of the function inside the training target. Applying it to the
+reward is the simpler change, and it tests the same idea: keep large rewards larger than small
+ones, without letting them grow large enough to damage training.
 
 **How I would know I was wrong.** Run the same six hours with the new rule. If the score still
 shows no increase of 800 or 1600, then clipping is not the limit. The next thing to examine

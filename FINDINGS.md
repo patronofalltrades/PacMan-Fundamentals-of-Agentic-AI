@@ -364,16 +364,18 @@ term stops the rule from losing information completely.
 
 | Reward | Game points | After clipping, now | After the square-root rule |
 |---|---|---|---|
-| One pellet | 10 | 1 | 3.2 |
-| First ghost | 200 | 1 | 14.2 |
-| Fourth ghost | 1600 | 1 | 40.0 |
+| One pellet | 10 | 1 | 2.33 |
+| First ghost | 200 | 1 | 13.38 |
+| Fourth ghost | 1600 | 1 | 40.61 |
 
-Clipping makes the fourth ghost equal to one pellet. The new rule makes it worth about 12
+Clipping makes the fourth ghost equal to one pellet. The new rule makes it worth about 17
 pellets. That is still far below the true 160 pellets, and that is the purpose. The numbers
 stay small enough for safe training, and the order survives.
 
-This is not a new idea. Two well-known systems, Ape-X and R2D2, use this rule for this exact
-purpose.
+**Where this rule comes from.** Ape-X and R2D2 use this same function to avoid reward
+clipping. They apply it to the value the network predicts, and put the reverse of the function
+inside the training target. That is the more careful form, and it needs a change to `learn()`.
+Applying the function to the reward is a one-line change, and it tests the same idea.
 
 **How to know the answer is wrong.** If the trained agent still shows no rise of 800 or 1600,
 then the reward rule is not the limit. The exploration rate is the next thing to examine.
