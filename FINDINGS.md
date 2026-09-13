@@ -5,7 +5,11 @@ This page gives the evidence behind each statement in the [README](README.md).
 It answers three questions. What did the run show? What does the evidence not show? What did
 the method itself teach?
 
-Every number comes from the [`results/`](results/) folder. Each section names its source.
+Numbers from the first run come from the [`results/`](results/) folder. Numbers from the
+second run come from [`results2/`](results2/). Each section names its source.
+
+Sections 1 to 9 describe run 1. [Section 10](#10-run-2-tested-the-answer-in-section-9-and-the-answer-was-wrong)
+describes run 2, which tested the answer that section 9 proposed.
 
 The [README glossary](README.md#words-used-in-this-repository) explains the technical words.
 
@@ -342,6 +346,11 @@ one came from reading the code.
 
 ## 9. The next experiment, and how to judge it
 
+> **This experiment was run. The answer was wrong.** Run 2 made this change and did not
+> improve the play. [Section 10](#10-run-2-tested-the-answer-in-section-9-and-the-answer-was-wrong)
+> gives the result. This section is kept as it was written, because the test it names below
+> is the test that decided the outcome.
+
 **Replace reward clipping with a rule that keeps the order of the rewards. Change that one
 setting only.**
 
@@ -394,3 +403,187 @@ random is the problem this change addresses.
 **How to know the answer is wrong.** Run the same six hours with the new rate. If the score
 stops rising at the same level, and after a similar number of games, then the limit is the
 reward, and not the exploration rate.
+
+---
+
+## 10. Run 2 tested the answer in section 9, and the answer was wrong
+
+Section 9 named one change, and it named the test that would prove the change wrong.
+Run 2 made that change. The test says the answer was wrong.
+
+### What changed, and what did not
+
+One line of the program changed. The reward rule became the square-root rule that section 9
+proposed.
+
+```python
+# Run 1
+float(np.clip(reward, -1, 1))
+
+# Run 2
+float(np.sign(reward) * (np.sqrt(np.abs(reward) + 1.0) - 1.0) + 0.001 * reward)
+```
+
+Every other setting held at the run 1 value: 15% exploration, a ceiling of 20,000 games, a
+learning rate of 0.0001, a memory of 50,000 steps, and the training seed 42. Both runs lasted
+six hours.
+
+The test conditions were untouched: the seeds 101, 202, 303, 404 and 505, 5% exploration, and
+a cap of 3,000 decisions.
+
+**The test proves it was untouched.** The five scores before training were identical in both
+runs, seed for seed.
+
+| | Seed 101 | Seed 202 | Seed 303 | Seed 404 | Seed 505 | Average |
+|---|---|---|---|---|---|---|
+| Run 1, before | 350 | 500 | 320 | 800 | 490 | 492 |
+| Run 2, before | 350 | 500 | 320 | 800 | 490 | 492 |
+
+Not only the same average. The same five numbers. Any difference after training therefore
+comes from the training, and not from the test.
+
+Source: `results/comparison.json`, `results2/comparison.json`.
+
+### The prediction, written before the run
+
+The prediction was committed to this repository at 00:48 on 13 September. The run started at
+01:00.
+
+| | The prediction | What happened | |
+|---|---|---|---|
+| 1 | The average goes above 3110 | 2298 | Wrong |
+| 2 | The animations show rises of 800 and 1600 | No rise of 800 or 1600 in any test game | Wrong |
+| 3 | The error is larger than 0.10 to 0.14, and does not fall | 0.48 to 0.51, and level | Correct |
+| 4 | The rate stays near 288 decisions per second | 330 | Correct |
+
+Items 3 and 4 confirm that the change worked as intended. The reward numbers grew, so the
+error grew. The extra arithmetic cost almost nothing. The change did what it was designed to
+do. It did not help the agent play.
+
+### The result
+
+| Measure | Run 1, clipping | Run 2, square root |
+|---|---|---|
+| Average before training | 492 | 492 |
+| Average after six hours | **2578** | **2298** |
+| The five scores after | 2790, 2330, 2610, 3110, 2050 | 1810, 2020, 2770, 2260, 2630 |
+| Distance between the five | 1060 | 960 |
+| Games completed | 7,628 | 9,269 |
+| Decisions | 6,225,108 | 7,128,525 |
+
+**Report this as no evidence of a difference.** The averages differ by 280. The five results
+of each run are spread across about 1000 points. The difference is smaller than the spread,
+so the correct statement is that run 2 does not show a difference. Run 2 scored lower on
+three of the five seeds and higher on two.
+
+It is wrong to call run 2 a small loss. It is also wrong to call it a near-match that needs
+more time. Five games cannot separate two numbers this close.
+
+Source: `results2/comparison.json`, `results2/training_summary.json`.
+
+### The matched-games test, which was necessary
+
+Run 2 ran at 330 decisions per second. Run 1 ran at 288. The machine was quieter for run 2,
+because the applications that macOS reopened after a restart were closed first.
+
+Six hours therefore bought run 2 about 15% more experience. The two runs are matched on time.
+They are not matched on experience.
+
+Both runs saved the network every 25 games, so both have a saved network at game 7,625. Those
+two networks were tested against each other, on the same five seeds and the same settings.
+
+| At game 7,625 | Seed 101 | Seed 202 | Seed 303 | Seed 404 | Seed 505 | Average |
+|---|---|---|---|---|---|---|
+| Run 1, clipping | 2580 | 2330 | 2700 | 2830 | 1070 | **2302** |
+| Run 2, square root | 1840 | 1160 | 2280 | 1410 | 1610 | **1660** |
+
+At equal experience the gap is 642, not 280, and run 2 is lower on four of the five seeds.
+The extra experience was hiding part of the gap.
+
+This is still inside the spread. The honest statement has two parts. There is no evidence
+that the square-root rule helped. There is weak evidence that it hurt.
+
+Source: `results2/matched_eval.json`, produced by `scripts/matched_eval.py`.
+
+### The measurement that settles it
+
+Section 9 wrote the test in advance:
+
+> **How to know the answer is wrong.** If the trained agent still shows no rise of 800 or
+> 1600, then the reward rule is not the limit. The exploration rate is the next thing to
+> examine.
+
+Section 8 read the score from the pictures of one animation, which shows the first 20 seconds
+of one game. That method can miss a chain. This measurement cannot. The reward that the game
+pays was recorded at every decision of all five test games.
+
+The four ghosts of one chain pay 200, 400, 800 and 1600 points. A payment of 800 or 1600 is
+therefore proof of a third or a fourth ghost.
+
+| Payment | What it means | Run 1 | Run 2 |
+|---|---|---|---|
+| 50 | A power pellet | 20 | 19 |
+| 200 | The first ghost | 12 | 9 |
+| 400 | The second ghost | 4 | 3 |
+| 800 | The third ghost | **0** | **0** |
+| 1600 | The fourth ghost | **0** | **0** |
+
+The ghosts eaten in each test game, in order:
+
+| Seed | Run 1 | Run 2 |
+|---|---|---|
+| 101 | 200, 400, 200, 200 | 200, 200 |
+| 202 | 200, 200, 200 | 200 |
+| 303 | 200, 200, 200 | 200, 400 |
+| 404 | 400, 200, 200, 400 | 200, 200, 400 |
+| 505 | 200, 400 | 200, 200, 200, 400 |
+
+Neither agent ever ate a third ghost. Run 2 ate 12 ghosts across the five games. Run 1 ate 16.
+Both agents ate about the same number of power pellets, so both still take the pellet and then
+stop short.
+
+The square-root rule made the fourth ghost worth about 17 pellets to the network, in place of
+one pellet. The behaviour did not change.
+
+Source: `results2/reward_events.txt`, produced by `scripts/reward_events.py`.
+
+### What this changes
+
+**The reward scale is not the limit.** Section 8 argued from the code that clipping reverses
+the reason to finish a chain, and the arithmetic in that section is still correct. Run 2 shows
+that correcting the arithmetic is not sufficient. Something else stops the agent before the
+third ghost.
+
+The most likely cause is that the agent never sees the behaviour it is supposed to learn from.
+A network learns from what its memory holds. A third ghost was eaten zero times in the test
+games, and a chain is rare during training as well. A reward that is never received cannot
+teach anything, whatever size it is given. The reward rule sets the price. It does not make
+the agent walk to the shop.
+
+That points at how the agent chooses to act, which is the exploration rate. Section 9 named
+exploration as the next thing to examine, on its own criterion, before this run existed.
+
+**Run 3 tests it.** Run 3 changes the exploration rate from 0.15 to 0.10 and returns the
+reward rule to clipping, so it differs from run 1 by one setting.
+
+### What the method taught
+
+This is the most useful part of run 2, and it does not depend on which setting wins.
+
+Two runs of six hours each have now produced differences smaller than the spread across the
+five test games. The test uses five games. The spread across those five games is about 1000
+points. A test of this size cannot resolve a difference of 300, or even of 600.
+
+Three consequences follow.
+
+1. A single six-hour run cannot rank two settings that are close. It can only find a change
+   large enough to clear the spread, as training itself does, at +2086.
+2. The matched-games test is worth its cost. It made a 280 difference show as 642, because it
+   removed a confound that the six-hour figures hide.
+3. The reward-event count is worth more than either average. It answers a question about
+   behaviour with a count of zero, and a count of zero needs no statistics.
+
+**A falling number is not evidence, and neither is a rising one.** The course brief warns that
+a falling error does not prove better play. Run 2 adds the matching warning for the score. A
+higher average across five games does not prove a better agent, unless the rise is larger than
+the spread between those games.

@@ -1,0 +1,30 @@
+
+===== RUN 1 clip  (episode 7628) =====
+scores: [2790, 2330, 2610, 3110, 2050]   mean 2578
+ghost rewards paid, across all five games:
+   ghost 1    200 points :  12
+   ghost 2    400 points :   4
+   ghost 3    800 points :   0
+   ghost 4   1600 points :   0
+   power pellets (50)      :  20
+per game, the ghosts eaten in order:
+   seed 101: [200, 400, 200, 200]
+   seed 202: [200, 200, 200]
+   seed 303: [200, 200, 200]
+   seed 404: [400, 200, 200, 400]
+   seed 505: [200, 400]
+
+===== RUN 2 sqrt  (episode 9269) =====
+scores: [1810, 2020, 2770, 2260, 2630]   mean 2298
+ghost rewards paid, across all five games:
+   ghost 1    200 points :   9
+   ghost 2    400 points :   3
+   ghost 3    800 points :   0
+   ghost 4   1600 points :   0
+   power pellets (50)      :  19
+per game, the ghosts eaten in order:
+   seed 101: [200, 200]
+   seed 202: [200]
+   seed 303: [200, 400]
+   seed 404: [200, 200, 400]
+   seed 505: [200, 200, 200, 400]
