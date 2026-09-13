@@ -234,3 +234,58 @@ day is not.
 
 **Produced.** Started `scripts/run_overnight.sh 01:00 07:00 pacman_dqn_rescaled.ipynb`
 at 00:48, detached. The log is `logs/overnight_20260913_004801.log`.
+
+---
+
+## 2026-09-13 · Run 2 result. The prediction failed, and the experiment is reported as such
+
+**Produced.** Run 2 finished at 07:01, status `interrupted` as designed, exit code 0.
+It reached 9,269 episodes and 7,128,525 decisions in six hours, at 330 decisions per
+second. The results are in `results2/`. The run folder is
+`pacman_runs/20260913_010005_795866`.
+
+**The result.** The square-root reward transform did not improve the play.
+
+| Measure | Run 1, `clip(r,-1,1)` | Run 2, square root |
+|---|---|---|
+| Average before training | 492 | 492, the same five scores |
+| Average after six hours | 2578 | 2298 |
+| Spread across the five seeds | 1060 | 960 |
+| Average at a matched 7,625 episodes | 2302 | 1660 |
+| Episodes scoring 3000 or more | 3.3% | 1.4% |
+| Average loss | 0.10 to 0.12 | 0.48 to 0.51 |
+
+**The prediction was recorded at 00:48 and it failed.** Prediction 1 said the average
+would go above 3110. It was 2298, which is below the run 1 average. Prediction 2 said the
+demonstration games would show ghost chains. The opposite happened: the share of episodes
+scoring 3000 or more fell from 3.3% to 1.4%. Predictions 3 and 4 held. The loss was larger
+and did not fall, and the rate stayed near the run 1 value.
+
+**State the result as noise, not as a small loss.** The difference in the averages after
+six hours is 280. The spread across the five seeds is 960 to 1060. The change is smaller
+than the spread, so the correct statement is that run 2 gives no evidence of a difference.
+Run 2 was lower on three of the five seeds. It was higher on two.
+
+**The matched-episode test was necessary, and it changes the reading.** Run 2 was 15%
+faster, because the machine was quieter, so six hours bought it more experience. At the
+matched point of 7,625 episodes, run 2 scored 1660 against 2302, and it was lower on four
+of the five seeds. The extra experience was hiding part of the gap. The evidence is still
+inside the spread, so the honest statement is: no evidence the transform helped, and weak
+evidence that it hurt.
+
+**Alternatives considered for the reading.** Reporting run 2 as a near-match that needs
+more time (rejected: the brief forbids reading a result inside the spread as a smaller
+success); reporting only the six-hour figures (rejected: the 15% rate difference is a real
+confound, and the matched checkpoint removes it at no cost); repeating run 2 (not selected
+now: it is the right next step, but the assignment is due and the null result is already
+the finding).
+
+**What this says about the limitation.** The written limitation claimed that reward
+clipping removed the ordering of the rewards, and that restoring the ordering would unlock
+ghost chains. Run 2 restored the ordering. Chains did not appear, and high-scoring episodes
+became less common. The reward scale is therefore not the limit. The exploration schedule
+is the better candidate, which is what the alternative next experiment already named. This
+is a stronger write-up than one run, because the idea was tested and it was wrong.
+
+**Produced.** `results2/`, `scripts/matched_eval.py`, and
+`results2/matched_eval.json`.
