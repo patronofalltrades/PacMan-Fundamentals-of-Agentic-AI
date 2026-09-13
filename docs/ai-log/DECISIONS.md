@@ -344,3 +344,43 @@ five evaluation games cannot resolve differences of this size, and that is a sta
 about the method, which is worth more than a tuning result.
 
 **Produced.** `pacman_dqn_explore.ipynb`.
+
+---
+
+## 2026-09-13 · Run 3 started on time. A mistake removed its stop signal, and it was restored
+
+**What happened.** Run 3 started at 10:30 as scheduled, from the supervisor armed at 09:17.
+At 11:20 Hanif asked to start the training now. I read the request as "it has not started
+yet", and I stopped the supervisor to restart it. The time was 11:20, not 09:24. The run had
+been training for 50 minutes.
+
+**The training survived.** `kill` was sent to the supervisor shell only. The notebook runs
+under `nbconvert`, which is a separate process, so the training continued without a break.
+The run folder `pacman_runs/20260913_103052_091454` shows an unbroken record: 1,316 games,
+846,225 decisions, and `exploration = 0.1` in every row.
+
+**Two things were lost, and both were restored within one minute.** The supervisor held the
+interrupt for 16:30, and it held the `caffeinate` that keeps the Mac awake. Stopping it
+removed both. `scripts/stop_training_at.sh 16:30` was started in its place. It found the same
+kernel, PID 65638, and it holds the machine awake until 16:30.
+
+**Decided: keep the run that is already going. Do not restart it.** A restart would discard
+50 minutes and move the six-hour window for no gain. The run began at the planned time, under
+the planned conditions, with the prediction already committed at 09:17.
+
+**One difference from the other runs.** `stop_training_at.sh` sends the interrupt and then
+exits. It does not wait for the evaluation and it does not write the summary line to the log.
+The output of the notebook still reaches `logs/overnight_20260913_091748.log`, because
+`nbconvert` inherited that file. The result must be read from the run folder at about 16:45,
+and not from the end of the log.
+
+**The lesson, and it is mine.** I checked the clock at the start of the session and then
+assumed time from the conversation. A tool call is the only source for the time. Read the
+clock before any action that depends on it.
+
+**Disk is the open risk.** Free space fell from 40 GiB to 22 GiB during the day. The project
+is 9.4 GB. macOS is staging an operating system update, which is taking the rest. Run 3 needs
+about 5.5 GB and has written 344 MB so far. The three ZIP files in `pacman_runs/` duplicate
+their run folders and hold 4.0 GB. They can be deleted to recover that space, and rebuilt
+from the folders. This was not done, because deleting is not reversible and Hanif did not
+ask for it.
