@@ -386,8 +386,13 @@ A level error did not mean a level agent. [FINDINGS.md](FINDINGS.md) section 2 e
 The short answer: the network is measured against a goal that it also produces. As the agent
 reaches better positions, the goal moves away as fast as the network approaches it.
 
-The right panel shows exploration. It is 100% for the first 1000 decisions, then a level 15%
-until the end. There is no reduction over time.
+The right panel shows exploration. **It looks almost empty. That is correct, and it is the
+point.** The line is 100% during the first 1000 decisions, and 15% for every game after that.
+Of the 7,628 games, one recorded 100% and 7,627 recorded 15%. The scale must reach 1.0 for
+that single first game, so most of the panel is blank space above a flat line.
+
+The flat line is the evidence that the exploration rate never changed. The agent was still
+making 15% random moves in game 7,628. This is what the alternative next experiment addresses.
 
 ### The score during training
 
@@ -676,71 +681,6 @@ GPU. Then select Runtime, then Run all. The first cell installs the software.
 **Before a long run, restart the computer.** This run reached 288 decisions each second after
 a restart. It reached 62 to 169 before one. The restart gave more than any setting on this
 page.
-
-## Assignment objectives
-
-This section restates the course brief.
-
-**The task.** Use the supplied notebook to train a Deep Q-Network on Ms. Pac-Man. Select three
-settings. Train the agent. Explain what it learned. Submit one public repository address.
-
-### The three settings the student selects
-
-| Setting | What it is | Starting point |
-|---|---|---|
-| Exploration | A number between 0 and 1. A value of 0.20 makes about 20% of training moves random | 0.20 |
-| Episodes | The number of training games | 100 |
-| Learning rate | The size of each correction | 0.0001 |
-
-The exploration rate stays the same after the first 1000 random moves. A game ends at game
-over, or at the time limit. The student may change other settings, but must explain each
-change.
-
-### Fair measurement
-
-Keep the test settings unchanged: the same five seeds, 5% exploration, and the same time
-limit, before and after training. Report every score and both averages. The first score comes
-from an untrained network, not from a program that moves at random. Watch the animations as
-well as the scores. A lower prediction error does not prove better play. Report runs that fail,
-and runs that do not improve.
-
-### What this page must contain
-
-- A short introduction, and instructions to open and run the notebook.
-- The three settings, each with a short reason.
-- What the student expected, then what the student observed.
-- The games completed, the decisions, the corrections, the time, and the computer used.
-- An explanation in plain words: four pictures are what the agent sees, joystick moves are what
-  it can do, and game points give the reward.
-- One limitation, and one next experiment. Name the single setting to change, and why.
-
-### What evidence this page must show
-
-- The animation before training, the best animation after training, and the animations between.
-- The training chart, so the score, error and exploration are visible.
-- A table with all five first scores, all five later scores, and both averages, with a link to
-  `comparison.json`.
-- Links to the notebook, `config.json`, `training.csv` and `training_summary.json`. A run that
-  was stopped early must be identified.
-
-### How the work is graded
-
-Four parts:
-
-1. **Playing strength.** A class list compares the average score of the five test games.
-2. **The explanation of how the agent learns.**
-3. **The reasons for the settings.**
-4. **The quality and completeness of the evidence.**
-
-The weight of the class list is announced in class.
-
-### Definition of done
-
-- The notebook runs with the selected settings, and this page records the real training budget.
-- The untrained and trained agents are measured under the same conditions, with all five scores.
-- The chart, the gameplay and the explanation agree with the recorded results.
-- The student can explain what the agent sees, what it can do, how it receives points, and one
-  limitation.
 
 ## Where the large files are
 
