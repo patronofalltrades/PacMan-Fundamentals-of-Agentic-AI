@@ -1,5 +1,12 @@
 # Ms. Pac-Man DQN — Fundamentals of Agentic AI, Class 3
 
+![Ms. Pac-Man chasing four fleeing ghosts through a neon arcade city](assets/hero.jpg)
+
+*The agent really did learn to hunt ghosts, which is the part I predicted it would never do.
+It never catches more than two of them. [Why that happens](#one-limitation) is the most useful
+finding in this repository. The picture is an illustration, not a result: every measured
+number on this page comes from [`results/`](results/).*
+
 > ### ⚠️ To see the notebook with its outputs, use this link
 > ### **[▶ Open `pacman_dqn.ipynb` in nbviewer](https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb)**
 >
