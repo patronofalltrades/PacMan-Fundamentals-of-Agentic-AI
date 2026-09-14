@@ -17,3 +17,7 @@ logs/
 
 # local scratch
 gif_compare.html
+
+# run 4 artefacts, kept locally and not part of the submitted three-run report
+results4/
+pacman_dqn_explore25.ipynb

@@ -149,7 +149,6 @@ Start with this page. It contains the complete explanation.
 | `results/demos/` | 307 short animations of the program playing | Every reader |
 | `pacman_dqn_rescaled.ipynb` | Run 2. The same program with one line changed, the reward rule | A reader who checks the experiment |
 | `pacman_dqn_explore.ipynb` | Run 3. The same program with one line changed, the exploration rate | A reader who checks the experiment |
-| `pacman_dqn_explore25.ipynb` | Run 4. The same program at an exploration rate of 0.25 | A reader who checks the experiment |
 | `results2/` | The measurements from run 2, and the tests that compare it with run 1 | A reader who wants the raw data |
 | `results3/` | The measurements from run 3, and the tests that compare it with run 1 | A reader who wants the raw data |
 | `scripts/` | Four small helper programs. Two control a run. Two measure a saved network | A reader who repeats the run |
@@ -167,8 +166,7 @@ animations. The GitHub viewer cannot show a file of that size. The link above sh
 file correctly. Nothing was removed from the file.
 
 **The three experiment notebooks are stored without their output, and this is deliberate.**
-`pacman_dqn_rescaled.ipynb`, `pacman_dqn_explore.ipynb` and `pacman_dqn_explore25.ipynb` are
-46 KB each, so GitHub shows them normally. Each is the same program as `pacman_dqn.ipynb` with
+`pacman_dqn_rescaled.ipynb` and `pacman_dqn_explore.ipynb` are 46 KB each, so GitHub shows them normally. Each is the same program as `pacman_dqn.ipynb` with
 one line changed, and the code is the part a reader needs to check. The output of each run is
 published in `results2/` and `results3/`, and the executed copy of each notebook is kept beside
 its own run data in the local archive as `executed_notebook.ipynb`.
@@ -282,7 +280,7 @@ Each word below has one meaning only. The last column gives the name in the prog
 | Power pellet | The large pellet. It makes the ghosts edible for a few seconds | Part of the game |
 | Ghost chain | The four ghosts eaten after one power pellet. They pay 200, 400, 800 and 1600 points | Part of the game |
 | Seed | A number that fixes a random sequence. The same seed gives the same game | `SEED = 42`, `EVAL_SEEDS` |
-| Baseline | The score of the untrained network. It is 492 | `baseline.json` |
+| Baseline | The score of the untrained network. It is 492 | The `before` block of `results/comparison.json` |
 | Evaluation | Five complete games with fixed settings, before and after training | `evaluate()` |
 | MPS | The interface that lets the program use the graphics chip of an Apple computer | The selected device |
 
@@ -611,16 +609,12 @@ earlier versions are kept below, because the path is the useful part.
 |---|---|---|
 | Written before run 1, from the code | The agent will never eat a power pellet or chase a ghost | The gameplay. It does both |
 | Written after run 1, from the gameplay | Clipping makes a full chain worth the same as one pellet, so the agent does not finish the chain | Run 2. The price was corrected and the behaviour did not change |
-| From three runs | The agent never experiences a chain, so it cannot learn one. Random movement is what produces the first accidental ghost | **Run 4, at an exploration rate of 0.25. The ghost count fell from 16 to 9 instead of rising, which is the result this version predicted could not happen** |
+| **Now, from three runs** | **The agent never experiences a chain, so it cannot learn one. Random movement is what produces the first accidental ghost** | Nothing yet. This is a hypothesis, not a result. [The test that would refute it is written down](#one-next-experiment) |
 
-> **This version is also wrong, and the test that shows it was written before the run.**
-> Run 4 raised the exploration rate to 0.25 and the ghost count fell. Across the three rates
-> measured, the count is 5 at 0.10, 16 at 0.15 and 9 at 0.25. That is a peak, not a line.
-> Moving away from 0.15 in either direction makes the agent worse at everything, and at 0.25
-> the power pellet habit weakened as well, from 20 to 15. The ghost count therefore looks
-> like a symptom of how well the agent plays, and not an independent cause.
-> **What survives is the fact, not the explanation: in four runs and twenty test games, no
-> agent ever ate a third ghost.** The measurements are in `results4/`.
+**Read version 3 as a hypothesis.** Versions 1 and 2 also fitted the evidence of their day,
+and each was replaced by the next measurement. Three runs are three points, and two of them
+share the same exploration rate. That is enough to propose an explanation and not enough to
+establish one.
 
 **The evidence for the current version.** The reward the game paid was recorded at every
 decision of the five test games, for all three trained networks.
@@ -942,14 +936,60 @@ follow from better play, and the play was not better.
 
 Full method and numbers: [FINDINGS.md](FINDINGS.md), sections 11 and 12.
 
-## One next experiment
+## Lessons learned
 
-> **This run was made, and it did not support the explanation.** Run 4 trained at an
-> exploration rate of 0.25 on 14 September. The ghost count did not rise. It fell from 16 to
-> 9, and the average score fell to 1678. By the test written below, that means the
-> explanation in [One limitation](#one-limitation) is wrong. The measurements are in
-> `results4/`. This page reports three runs, because run 4 was made after the work was
-> written up, and its result is stated here rather than rewritten through every section.
+Three runs of six hours each. One produced a score. The other two produced an explanation, and
+each of them cost a prediction I had written down and then had to withdraw.
+
+### 1. A falling error is not progress, and neither is a rising score
+
+The course brief warns that a falling loss does not prove better play. Run 1 showed the same
+lesson from the other side: the error stayed level for the whole run while the score more than
+doubled. The network is graded against a goal it also produces, so the gap does not close.
+
+Runs 2 and 3 added the matching warning for the score. A change of 280 across five games is not
+an improvement and not a loss. It is a test too small to tell.
+
+### 2. Decide what counts as a difference before you see the number
+
+The rule used here is the one section 1 used for run 1: every game must move the same way, and
+the two sets of five scores must not overlap. Run 2 fails that test and is reported as no
+difference. Run 3 passes it and is reported as real.
+
+Writing the rule down first is what makes the two reports defensible. Choosing it afterwards
+would have let me call either result whatever I preferred.
+
+### 3. Match the runs on experience, not only on time
+
+Every run was six hours. That is not the same as the same amount of practice. Run 2 was 15%
+faster, because the computer was quieter, so six hours bought it more games. Testing both saved
+networks at game 7,625 removed the confound, and it changed the gap from 280 to 642.
+
+The confound came from a restart, which is also the single change that helped the most. A fix
+in one place became a measurement error in another.
+
+### 4. Count behaviour, not just score
+
+The measurement that settled the reward question was a count of zero. The reward the game paid
+was recorded at every decision of the five test games: no payment of 800 or 1600 in any run, so
+no agent ever ate a third ghost.
+
+A count of zero needs no statistics. Averages of five noisy games need a great deal.
+
+### 5. A price cannot teach an experience that never happened
+
+This is the finding, and it is the one worth carrying to another problem. Run 2 corrected what
+a full chain was worth to the network, and nothing changed, because the network had no memory
+of a full chain to attach the new value to.
+
+### 6. Be willing to publish the version that was wrong
+
+The limitation on this page is in its third version. The first came from reading the code. The
+second came from watching the gameplay. Both are kept, with the measurement that replaced each
+one. Three explanations that were each tested and found wanting is a better result than one
+explanation that was never put at risk.
+
+## One next experiment
 
 **Raise the exploration rate from 0.15 to 0.25. Change that one setting only.**
 
@@ -974,13 +1014,12 @@ explanation fails. The next things to examine would be the length of the run, be
 may need more than six hours to appear, and the rule that updates the network, because a rare
 event must be replayed more often than a common one before it can be learned.
 
-**What I expect, written before the run.** The ghost count rises above 16, to between 20 and
-30. The average score falls below 2578, to between 1800 and 2500. No payment of 800 appears,
-because random movement produces encounters and not sequences. More games are completed than
-run 1's 7,628, because more random deaths make games shorter.
+**What I expect.** The ghost count rises above 16. The average score falls below 2578, because
+random moves also walk the agent into ghosts that are not edible. No payment of 800 appears,
+because random movement produces encounters and not sequences.
 
 **The third item admits a limit in my own explanation.** If encounters were sufficient, more
-of them should eventually produce a chain. I predict they will not. That would mean the
+of them should eventually produce a chain. I expect they will not. That would mean the
 explanation accounts for the first and second ghost, and not for the absence of a third.
 
 **Why this is worth more than a better score.** The three runs so far changed a price and

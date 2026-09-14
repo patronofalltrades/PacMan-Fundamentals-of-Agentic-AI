@@ -1,3 +1,0 @@
-run1_clip_0.15  ep 7625  scores [2580, 2330, 2700, 2830, 1070]  mean 2302
-run4_clip_0.25  ep 7625  scores [960, 1530, 1350, 1600, 990]  mean 1286
-matched at episode 7625:  run1_clip_0.15 2302   run4_clip_0.25 1286   diff -1016

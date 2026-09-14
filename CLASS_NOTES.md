@@ -133,21 +133,20 @@ changed one thing.
 and that is the point: it would be the first measurement in this project that moves the
 behaviour on purpose instead of guessing at a setting.
 
-### I ran it, and it failed
+## Lessons learned, in six lines
 
-| Exploration | Ghosts eaten | Power pellets | Average |
-|---|---|---|---|
-| 0.10 | 5 | 20 | 1748 |
-| **0.15** | **16** | **20** | **2578** |
-| 0.25 | 9 | 15 | 1678 |
-
-The ghost count fell instead of rising. That is the bottom row of my own table, so the
-encounter explanation is wrong. 0.15 is a peak, and moving either way makes the agent worse
-at everything — at 0.25 even the power pellet habit weakened.
-
-**If asked, say this:** the fact survives, the explanation does not. In four runs and twenty
-test games, no agent ever ate a third ghost. I have three explanations that were each
-measured and found wrong, which is further than one run and a guess.
+1. **A falling error is not progress, and neither is a rising score.** The error stayed level
+   while the score doubled. A gain smaller than the spread across five games is not a gain.
+2. **Decide what counts as a difference before you see the number.** Every game must move the
+   same way, and the two sets must not overlap. Run 2 fails it. Run 3 passes it.
+3. **Match runs on experience, not only on time.** Run 2 was 15% faster, so six hours bought it
+   more practice. Testing both networks at game 7,625 changed the gap from 280 to 642.
+4. **Count behaviour, not just score.** The measurement that settled the reward question was a
+   count of zero third ghosts. A zero needs no statistics.
+5. **A price cannot teach an experience that never happened.** That is the finding, and it
+   transfers to any problem where the useful event is rare.
+6. **Publish the version that was wrong.** Three explanations, each measured and replaced, is
+   worth more than one that was never put at risk.
 
 ---
 
