@@ -9314,3 +9314,108 @@ print('broken anchors:', bad if bad else 'none')
 print('first nbviewer link now at line', R[:R.index('nbviewer.org')].count(chr(10))+1)
 "
 ```
+
+### 09:10 · Bash
+
+Commit and push the notebook callout
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && S=/private/tmp/claude-501/-Users-haniframadhan-Fundamentals-of-Agentic-AI-pacman-dqn/470825af-da49-4a24-8763-bf63413a3952/scratchpad && printf '%s\n' \
+'Put the notebook link at the top, where a grader will see it' \
+'' \
+'The submission checklist says the instructor must open the notebook and see the' \
+'scores, plots and gameplay without rerunning it. GitHub cannot render a 14.6 MB' \
+'notebook, and the nbviewer link was at line 136 of the README.' \
+'' \
+'The link is now the first thing on the page, with the reason for the size and a' \
+'statement that no output was cleared. It also names where each piece of evidence' \
+'sits on this page, so the notebook is not needed to grade the work.' \
+'' \
+'Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>' \
+'Claude-Session: https://claude.ai/code/session_01SWQXXSVSQin7WCtownHXsE' > "$S/msg7.txt" && git add -A && git -c commit.gpgsign=false commit -q -F "$S/msg7.txt" && git push -q origin main && echo "pushed $(date '+%T')" && git log --oneline -1
+```
+
+### 09:10 · WebFetch
+
+https://github.com/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI
+
+### 09:10 · WebFetch
+
+https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb
+
+### 09:11 · Bash
+
+Verify the raw notebook is fetchable and retry nbviewer
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && echo "=== is the raw notebook fetchable from GitHub? (this is what nbviewer reads) ===" && curl -sIL "https://raw.githubusercontent.com/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/main/pacman_dqn.ipynb" | grep -iE "^HTTP|^content-length|^content-type" | sed 's/^/  /' && echo && echo "=== nbviewer, direct check ===" && curl -s -o /dev/null -w "  HTTP %{http_code}  in %{time_total}s\n" "https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb"
+```
+
+### 09:11 · Bash
+
+Verify the nbviewer rendering shows the required outputs
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && curl -s "https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb" -o /tmp/nbv.html && echo "  rendered page: $(wc -c < /tmp/nbv.html | tr -d ' ') bytes" && echo && echo "=== does the rendered notebook show the evidence a grader needs? ===" && for pat in "EXPLORATION = 0.15" "EPISODES = 20000" "LEARNING_RATE = 0.0001" "2578" "2790" "3110" "492" "interrupted" "7628"; do printf "  %-24s " "$pat"; grep -qF "$pat" /tmp/nbv.html && echo "visible" || echo "NOT FOUND"; done && echo && echo "=== images embedded in the rendered page ===" && grep -o 'data:image/[a-z]*' /tmp/nbv.html | sort | uniq -c | sed 's/^/  /'
+```
+
+### 09:11 · Bash
+
+Check hyperparameter and GIF visibility in the rendered notebook
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && echo "=== hyperparameters in the rendered page (syntax highlighting splits them) ===" && grep -o 'EXPLORATION[^<]*<[^>]*>[^<]*<[^>]*>[^<]*' /tmp/nbv.html | head -3 | sed 's/^/  /' && python3 -c "
+import re,html
+t=open('/tmp/nbv.html').read()
+plain=html.unescape(re.sub(r'<[^>]+>','',t))
+for k in ('EXPLORATION','EPISODES','LEARNING_RATE'):
+    m=re.search(k+r'\s*=\s*([0-9.]+)', plain)
+    print(f'  {k:16} {m.group(1) if m else \"NOT FOUND\"}')
+" && echo && echo "=== what output types does the notebook actually store? ===" && python3 -c "
+import json, collections
+nb=json.load(open('pacman_dqn.ipynb'))
+c=collections.Counter()
+for cell in nb['cells']:
+    for o in cell.get('outputs',[]):
+        for k in o.get('data',{}): c[k]+=1
+        if o.get('output_type')=='stream': c['stream']+=1
+for k,v in c.most_common(): print(f'  {k:28} {v}')
+" && echo && echo "=== gif data in the rendered page ===" && grep -c "image/gif" /tmp/nbv.html | sed 's/^/  occurrences: /'
+```
+
+### 09:12 · Bash
+
+Verify every image embedded in the README exists and is tracked
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 - <<'PY'
+import re, pathlib, subprocess, os
+R = pathlib.Path("README.md").read_text()
+tracked = set(subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split())
+emb = re.findall(r'!\[([^\]]*)\]\(([^)]+\.(?:gif|png))\)', R)
+print(f"images embedded in the README: {len(emb)}")
+bad = 0
+for alt, path in emb:
+    p = path.split('?')[0]
+    ok = p in tracked
+    size = os.path.getsize(p)/1024 if os.path.exists(p) else 0
+    if not ok: bad += 1
+    print(f"  {'ok  ' if ok else 'MISS'} {p:42} {size:7.0f} KB   alt: {alt[:38]}")
+print(f"\nbroken image paths: {bad}")
+PY
+```
+
+### 09:12 · Bash
+
+Check the notebook explanation is still accurate
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && sed -n '/The three experiment notebooks/,/executed_notebook/p' README.md | head -12 | sed 's/^/  /' && echo && echo "=== which notebook is the submitted one? ===" && python3 -c "
+import json
+for f in ('pacman_dqn.ipynb','pacman_dqn_rescaled.ipynb','pacman_dqn_explore.ipynb'):
+    nb=json.load(open(f))
+    e=[l.strip() for c in nb['cells'] if c['cell_type']=='code' for l in c['source'] if l.startswith('EXPLORATION =')]
+    n=sum(1 for c in nb['cells'] if c.get('outputs'))
+    print(f'  {f:28} {e[0]:22} cells with outputs: {n}')
+"
+```

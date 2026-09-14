@@ -177,11 +177,17 @@ output of the real run.
 animations. The GitHub viewer cannot show a file of that size. The link above shows the same
 file correctly. Nothing was removed from the file.
 
-**The three experiment notebooks are stored without their output, and this is deliberate.**
-`pacman_dqn_rescaled.ipynb` and `pacman_dqn_explore.ipynb` are 46 KB each, so GitHub shows them normally. Each is the same program as `pacman_dqn.ipynb` with
-one line changed, and the code is the part a reader needs to check. The output of each run is
-published in `results2/` and `results3/`, and the executed copy of each notebook is kept beside
-its own run data in the local archive as `executed_notebook.ipynb`.
+**[`pacman_dqn.ipynb`](pacman_dqn.ipynb) is the notebook to grade.** It is the executed file
+from the run reported on this page: exploration 0.15, a ceiling of 20,000 games, a learning
+rate of 0.0001. It holds every cell output from that run, including the 307 animations. No
+output was cleared.
+
+**The two experiment notebooks are stored without their output, and this is deliberate.**
+`pacman_dqn_rescaled.ipynb` and `pacman_dqn_explore.ipynb` are 46 KB each, so GitHub shows
+them normally. Each is the same program as `pacman_dqn.ipynb` with one line changed, and that
+line is what a reader needs to check. The output of those two runs is published in
+`results2/` and `results3/`, and the executed copy of each is kept beside its own run data in
+the local archive as `executed_notebook.ipynb`.
 
 ## What the program does, in plain words
 
