@@ -452,3 +452,73 @@ unchanged, and still holds 1660.
 
 **Produced.** `results3/`, and the run 3 sections of `README.md` and `FINDINGS.md`
 (sections 11, 12 and 13).
+
+---
+
+## 2026-09-13 · Run 4, the test of the encounter explanation
+
+**Decided.** Run `pacman_dqn_explore25.ipynb` from 00:00 to 06:00 on 14 September.
+`EXPLORATION` changes from 0.15 to 0.25. The reward rule stays at `clip(reward, -1, 1)`, so
+run 4 differs from run 1 by one setting. Every other value holds. The evaluation settings are
+untouched: seeds 101/202/303/404/505, 5% exploration, a 3,000-decision cap.
+
+**Built from run 1 again, and checked.** The notebook is a copy of `pacman_dqn.ipynb` with the
+outputs removed and exactly one line changed. The copy was tested for `np.clip(reward, -1, 1)`
+and for the absence of any square-root term. All four notebooks were then compared, and each
+differs only in the two intended places:
+
+| Notebook | Exploration | Reward rule |
+|---|---|---|
+| `pacman_dqn.ipynb` | 0.15 | clipping |
+| `pacman_dqn_rescaled.ipynb` | 0.15 | square root |
+| `pacman_dqn_explore.ipynb` | 0.10 | clipping |
+| `pacman_dqn_explore25.ipynb` | **0.25** | clipping |
+
+**Why this direction.** Runs at 0.10 and 0.15 gave ghost counts of 5 and 16. That is two
+points on a line, and two points cannot show a relation. A third rate above 0.15 tests whether
+the count continues to rise. Lowering the rate again would only repeat what run 3 showed.
+
+**Alternatives considered.** Repeating run 1 at 0.15 to measure the spread between runs
+(rejected: it tests no idea, and the deadline allows one more run); a longer run at 0.15
+(not selected: it changes the length, which is the one variable held constant in every run so
+far, and the encounter question can be answered in six hours); adding a reward for being near
+an edible ghost (rejected: that is two changes, a new reward term and a new shape, and it
+would answer nothing cleanly).
+
+**Prediction, recorded before the run starts.** The number that matters is the ghost count,
+and not the score. Run 1 ate 16 ghosts in the five test games.
+
+1. **Ghosts eaten rises above 16.** This is the test of the explanation. I expect 20 to 30.
+2. **The average score falls below 2578.** I expect 1800 to 2500. More random movement also
+   walks the agent into ghosts that are not edible, and that cost is larger than the gain.
+3. **Payments of 800 stay at zero.** Eating three ghosts in one power-pellet window needs
+   moves that follow each other. Random movement produces encounters. It does not produce a
+   sequence.
+4. **Games completed rises above 7,628.** More random deaths make games shorter, so more games
+   fit into six hours.
+
+**Items 1 and 2 together are the point of the run.** If both hold, the run separates the
+mechanism from the score for the first time in this project. It would show the behaviour
+moving in the predicted direction while the grade gets worse, which no run so far has done.
+
+**How the prediction can fail, and what each failure means.**
+
+- If the ghost count does not rise above 16, the encounter explanation is wrong. Exploration
+  would then look important only because 0.10 is too low for some other reason. The next
+  candidates become the length of the run and the rule that updates the network.
+- If the ghost count rises **and** the score also rises above 2578, then 0.15 was simply too
+  low, and the explanation is right but incomplete.
+- Item 3 is the one I most want to be wrong about. A single payment of 800 would be the first
+  evidence in four runs that a chain can be learned at all.
+
+**Item 3 admits a limit in my own explanation.** If encounters were sufficient, more
+encounters should eventually produce a chain. I predict they will not. That means the
+encounter explanation accounts for why the agent eats a first and second ghost, and not for
+why it never eats a third. Say this in the write-up. Do not present the explanation as
+complete.
+
+**Disk.** Free space is 26 GiB. A run at a higher exploration rate is expected to complete
+more games, so it writes more checkpoints: perhaps 400 to 480, against run 3's 308. With the
+archive that is about 7 GB. It fits. Check the figure before the run starts.
+
+**Produced.** `pacman_dqn_explore25.ipynb`.
