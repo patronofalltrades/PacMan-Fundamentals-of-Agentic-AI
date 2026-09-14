@@ -1,5 +1,17 @@
 # Ms. Pac-Man DQN — Fundamentals of Agentic AI, Class 3
 
+> ### ⚠️ To see the notebook with its outputs, use this link
+> ### **[▶ Open `pacman_dqn.ipynb` in nbviewer](https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb)**
+>
+> **GitHub shows the notebook as an empty page.** The executed file is 14.6 MB, because it
+> holds 307 gameplay animations. The GitHub viewer cannot display a file of that size. The
+> link above shows the same file, complete. **No output was cleared.**
+>
+> You do not need the notebook to grade this work. Every piece of evidence is on this page:
+> the [five before and after scores](#the-result), the
+> [training plot](#the-training-chart), the [gameplay animations](#the-gameplay), and the
+> [run cost](#what-the-run-cost). The raw files are in [`results/`](results/).
+
 ## What this is
 
 This repository holds a computer program that learned to play Ms. Pac-Man.

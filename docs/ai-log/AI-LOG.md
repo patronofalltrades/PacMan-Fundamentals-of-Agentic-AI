@@ -9153,3 +9153,164 @@ Check what the brief requires in the submission
 ```sh
 cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && echo "=== what the brief asks to hand in ===" && grep -niE "submit|deliver|hand in|include|repository|README" docs/BRIEF.md | head -14 | sed 's/^/  /' && echo && echo "=== ai-log README, what it is for ===" && head -12 docs/ai-log/README.md | sed 's/^/  /'
 ```
+
+### 09:08 · Bash
+
+Push the cleanup and verify the brief checklist
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && S=/private/tmp/claude-501/-Users-haniframadhan-Fundamentals-of-Agentic-AI-pacman-dqn/470825af-da49-4a24-8763-bf63413a3952/scratchpad && printf '%s\n' \
+'Keep the repository to the three runs it reports' \
+'' \
+'The two scripts that were specific to a later run are no longer tracked, and' \
+'the usage example in analyse_run.sh now names a run the report covers. The' \
+'README row for the scripts folder gives the correct count and describes what' \
+'each group does.' \
+'' \
+'Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>' \
+'Claude-Session: https://claude.ai/code/session_01SWQXXSVSQin7WCtownHXsE' > "$S/msg6.txt" && git add -A && git -c commit.gpgsign=false commit -q -F "$S/msg6.txt" && git push -q origin main && echo "pushed $(date '+%T')" && echo && echo "=== BRIEF checklist, verified ===" && python3 - <<'PY'
+import json, os, re, subprocess, pathlib
+R = pathlib.Path("README.md").read_text()
+tracked = set(subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split())
+def ok(c): return "ok  " if c else "FAIL"
+
+nb = json.load(open('pacman_dqn.ipynb'))
+print(f"  {ok(any(c.get('outputs') for c in nb['cells']))} notebook saved with outputs, and tracked ({os.path.getsize('pacman_dqn.ipynb')/1e6:.1f} MB)")
+
+gifs = [f for f in tracked if f.startswith('results/demos/') and f.endswith('.gif')]
+print(f"  {ok(len(gifs) >= 300)} {len(gifs)} animations tracked")
+embedded = re.findall(r'results/demos/[\w./-]+\.gif', R)
+print(f"  {ok(len(embedded) > 0)} {len(set(embedded))} distinct animations referenced from the README")
+print(f"  {ok('untrained' in R.lower())} untrained game shown")
+print(f"  {ok('best' in R.lower() and 'gif' in R.lower() or 'final_best' in R)} best trained game shown")
+
+print(f"  {ok(not any(f.endswith('.pt') for f in tracked))} no checkpoints in the repository")
+print(f"  {ok('pacman_runs' in R)} checkpoint location explained in the README")
+print(f"  {ok('interrupted' in R)} run reported as interrupted")
+c = json.load(open('results/comparison.json'))
+print(f"  {ok(c['before']['mean']==492 and c['after']['mean']==2578)} README numbers match results/comparison.json")
+print(f"  {ok('requirements.txt' in tracked)} requirements.txt tracked")
+print(f"  {ok('How to repeat this run' in R)} reproduction instructions present")
+PY
+```
+
+### 09:08 · Claude replied
+
+Two things slipped through that a grader would see. Fixing the scripts.
+
+### 09:09 · Hanif asked
+
+> https://docs.google.com/document/d/1lnn9etY1Utpf-FMMyoatUjxzli02-FHXIFWo_KDW3n4/edit?tab=t.0#heading=h.2bt0qteg90iz
+> 
+> compare the repo with this assingment rubric. Make sure everything is aligned and covered before submitting.
+
+### 09:09 · Bash
+
+Check the README against the rubric evidence requirements
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 - <<'PY'
+import re, pathlib, json, subprocess
+R = pathlib.Path("README.md").read_text()
+tracked = set(subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split())
+def chk(label, cond, note=""):
+    print(f"  {'ok  ' if cond else 'MISS'} {label}" + (f"   <- {note}" if note and not cond else ""))
+
+print("== EVIDENCE REQUIRED IN THE README ==")
+chk("training_dashboard.png embedded (image, not link)", bool(re.search(r'!\[[^\]]*\]\([^)]*training_dashboard\.png', R)))
+chk("comparison.json linked", 'comparison.json' in R and bool(re.search(r'\]\([^)]*comparison\.json', R)))
+chk("config.json linked", bool(re.search(r'\]\([^)]*config\.json', R)))
+chk("training.csv linked", bool(re.search(r'\]\([^)]*training\.csv', R)))
+chk("training_summary.json linked", bool(re.search(r'\]\([^)]*training_summary\.json', R)))
+chk("notebook linked", bool(re.search(r'\]\([^)]*pacman_dqn\.ipynb', R)))
+emb = re.findall(r'!\[[^\]]*\]\(([^)]*\.gif)', R)
+chk(f"GIFs embedded as images ({len(emb)} found)", len(emb) >= 3)
+chk("untrained GIF embedded", any('untrained' in g or 'episode_0000' in g or 'baseline' in g for g in emb), f"embedded: {emb[:6]}")
+chk("best trained GIF embedded", any('best' in g for g in emb), f"embedded: {emb[:6]}")
+
+print()
+print("== README REQUIREMENTS ==")
+chk("completed episodes reported", '7,628' in R or '7628' in R)
+chk("decisions reported", '6,225,108' in R or '6225108' in R)
+chk("learning updates reported", '1,556,027' in R or '1556027' in R)
+chk("elapsed time reported", bool(re.search(r'six hours|6 hours|21,?59\d', R, re.I)))
+chk("hardware used reported", bool(re.search(r'\bM[1-4]\b|Apple|MPS|GPU|chip|processor', R)))
+chk("four screens = observations", 'four' in R.lower() and 'screen' in R.lower())
+chk("joystick / moves = actions", bool(re.search(r'joystick|nine moves|action', R, re.I)))
+chk("game points = reward", bool(re.search(r'game points', R, re.I)))
+chk("one limitation", '## One limitation' in R)
+chk("one next experiment", '## One next experiment' in R)
+chk("expected before / observed after", 'What I expected, and what happened' in R)
+PY
+```
+
+### 09:10 · Bash
+
+Check fairness clauses and the notebook visibility problem
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 - <<'PY'
+import re, pathlib
+R = pathlib.Path("README.md").read_text()
+def chk(l,c,n=""): print(f"  {'ok  ' if c else 'MISS'} {l}" + (f"   <- {n}" if not c and n else ""))
+print("== FAIRNESS / HONESTY CLAUSES ==")
+chk("baseline is an UNTRAINED NETWORK, not random actions", bool(re.search(r'untrained network', R, re.I)))
+chk("evaluation settings stated as unchanged", bool(re.search(r'identical both times|unchanged|same five seeds', R, re.I)))
+chk("five seeds named", '101' in R and '505' in R)
+chk("5% evaluation exploration stated", bool(re.search(r'5%|0\.05', R)))
+chk("lower loss does not guarantee better play", bool(re.search(r'loss.{0,80}not|not.{0,80}progress|error.{0,60}not', R, re.I|re.S)))
+chk("failed runs reported honestly", 'no evidence of a difference' in R or 'did not work' in R)
+chk("demos folder linked", bool(re.search(r'\]\([^)]*results/demos', R)))
+print()
+print("== NOTEBOOK VISIBILITY ON GITHUB (checklist item 1) ==")
+chk("README warns GitHub cannot render it", 'empty page' in R)
+chk("nbviewer link present", 'nbviewer.org' in R)
+pos = R.index('nbviewer.org') if 'nbviewer.org' in R else -1
+line = R[:pos].count('\n')+1 if pos>=0 else -1
+print(f"       first nbviewer link is at line {line} of {R.count(chr(10))+1}")
+print()
+print("== HYPERPARAMETER REASONS ==")
+for k in ('Exploration','0.15','20000','20,000','0.0001'):
+    chk(f"{k} appears", k in R)
+PY
+echo && echo "=== actual notebook size vs GitHub rendering limit ===" && ls -l pacman_dqn.ipynb | awk '{printf "  %.1f MB  (GitHub renders .ipynb reliably below about 1 MB)\n", $5/1048576}'
+```
+
+### 09:10 · Bash
+
+Add a prominent notebook callout at the top of the README
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 - <<'PY'
+import pathlib
+p = pathlib.Path("README.md"); t = p.read_text()
+old = """# Ms. Pac-Man DQN — Fundamentals of Agentic AI, Class 3
+
+## What this is"""
+new = """# Ms. Pac-Man DQN — Fundamentals of Agentic AI, Class 3
+
+> ### ⚠️ To see the notebook with its outputs, use this link
+> ### **[▶ Open `pacman_dqn.ipynb` in nbviewer](https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb)**
+>
+> **GitHub shows the notebook as an empty page.** The executed file is 14.6 MB, because it
+> holds 307 gameplay animations. The GitHub viewer cannot display a file of that size. The
+> link above shows the same file, complete. **No output was cleared.**
+>
+> You do not need the notebook to grade this work. Every piece of evidence is on this page:
+> the [five before and after scores](#the-result), the
+> [training plot](#the-training-chart), the [gameplay animations](#the-gameplay), and the
+> [run cost](#what-the-run-cost). The raw files are in [`results/`](results/).
+
+## What this is"""
+assert old in t; t = t.replace(old, new, 1)
+p.write_text(t); print("top-of-README notebook callout added")
+PY
+echo && python3 -c "
+import re, pathlib
+R=pathlib.Path('README.md').read_text()
+a={re.sub(r'[^\w\s-]','',h.lower()).strip().replace(' ','-') for h in re.findall(r'^#{1,6}\s+(.*)\$', R, re.M)}
+bad=[l for l in re.findall(r'\]\(#([^)]+)\)', R) if l not in a]
+print('broken anchors:', bad if bad else 'none')
+print('first nbviewer link now at line', R[:R.index('nbviewer.org')].count(chr(10))+1)
+"
+```
