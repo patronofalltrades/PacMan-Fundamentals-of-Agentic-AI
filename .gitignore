@@ -23,3 +23,6 @@ results4/
 pacman_dqn_explore25.ipynb
 scripts/arm_run4.sh
 scripts/after_run4.sh
+
+# speaking notes for the class, kept local
+CLASS_NOTES.md

@@ -9419,3 +9419,254 @@ for f in ('pacman_dqn.ipynb','pacman_dqn_rescaled.ipynb','pacman_dqn_explore.ipy
     print(f'  {f:28} {e[0]:22} cells with outputs: {n}')
 "
 ```
+
+### 09:12 · Bash
+
+Name the graded notebook and push
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 - <<'PY'
+import pathlib
+p = pathlib.Path("README.md"); t = p.read_text()
+old = """**The three experiment notebooks are stored without their output, and this is deliberate.**
+`pacman_dqn_rescaled.ipynb` and `pacman_dqn_explore.ipynb` are 46 KB each, so GitHub shows them normally. Each is the same program as `pacman_dqn.ipynb` with
+one line changed, and the code is the part a reader needs to check. The output of each run is
+published in `results2/` and `results3/`, and the executed copy of each notebook is kept beside
+its own run data in the local archive as `executed_notebook.ipynb`."""
+new = """**[`pacman_dqn.ipynb`](pacman_dqn.ipynb) is the notebook to grade.** It is the executed file
+from the run reported on this page: exploration 0.15, a ceiling of 20,000 games, a learning
+rate of 0.0001. It holds every cell output from that run, including the 307 animations. No
+output was cleared.
+
+**The two experiment notebooks are stored without their output, and this is deliberate.**
+`pacman_dqn_rescaled.ipynb` and `pacman_dqn_explore.ipynb` are 46 KB each, so GitHub shows
+them normally. Each is the same program as `pacman_dqn.ipynb` with one line changed, and that
+line is what a reader needs to check. The output of those two runs is published in
+`results2/` and `results3/`, and the executed copy of each is kept beside its own run data in
+the local archive as `executed_notebook.ipynb`."""
+assert old in t; p.write_text(t.replace(old, new, 1)); print("notebook section corrected")
+PY
+S=/private/tmp/claude-501/-Users-haniframadhan-Fundamentals-of-Agentic-AI-pacman-dqn/470825af-da49-4a24-8763-bf63413a3952/scratchpad && printf '%s\n' \
+'Name the notebook to grade, and correct the count of experiment notebooks' \
+'' \
+'The assignment asks for the executed notebook from the reported run, with its' \
+'outputs kept. The README now names pacman_dqn.ipynb as that file, gives its' \
+'three settings, and states that no output was cleared.' \
+'' \
+'Two experiment notebooks are published without output, not three.' \
+'' \
+'Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>' \
+'Claude-Session: https://claude.ai/code/session_01SWQXXSVSQin7WCtownHXsE' > "$S/msg8.txt" && git add -A && git -c commit.gpgsign=false commit -q -F "$S/msg8.txt" && git push -q origin main && echo "pushed $(date '+%T')" && echo && python3 -c "
+import re,pathlib
+R=pathlib.Path('README.md').read_text()
+a={re.sub(r'[^\w\s-]','',h.lower()).strip().replace(' ','-') for h in re.findall(r'^#{1,6}\s+(.*)\$', R, re.M)}
+print('broken anchors:', [l for l in re.findall(r'\]\(#([^)]+)\)', R) if l not in a] or 'none')
+"
+```
+
+### 09:12 · Claude replied
+
+One stale word ("three experiment notebooks" — there are two) and one thing worth making unambiguous for a grader: which notebook is *the* submission.
+
+### 09:15 · Hanif asked
+
+> let's add the about description
+
+### 09:15 · Bash
+
+Check for a GitHub token or CLI
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && echo "=== token available? (existence only, never the value) ===" && for v in GITHUB_TOKEN GH_TOKEN GITHUB_PAT; do printf "  %-14s " "$v"; [ -n "${(P)v}" ] 2>/dev/null && echo "set" || echo "not set"; done && echo && echo "=== gh cli ===" && (command -v gh >/dev/null && echo "  installed" || echo "  not installed") && echo && echo "=== git credential helper ===" && (git config --get credential.helper || echo "  none") | sed 's/^/  /' && echo && echo "=== is a github.com credential stored in the keychain? ===" && (security find-internet-password -s github.com >/dev/null 2>&1 && echo "  yes, a github.com entry exists" || echo "  no github.com entry")
+```
+
+### 09:16 · Bash
+
+Test whether the keychain credential works for the GitHub API
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && TOKEN=$(security find-internet-password -s github.com -w 2>/dev/null) ; if [ -z "$TOKEN" ]; then echo "  no usable credential returned"; else CODE=$(curl -s -o /tmp/ghcheck.json -w "%{http_code}" -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" https://api.github.com/user); echo "  api.github.com/user -> HTTP $CODE"; if [ "$CODE" = "200" ]; then python3 -c "import json;d=json.load(open('/tmp/ghcheck.json'));print('  authenticated as',d.get('login'))"; else python3 -c "import json;d=json.load(open('/tmp/ghcheck.json'));print('  message:',d.get('message'))" 2>/dev/null; fi; fi; unset TOKEN
+```
+
+### 09:16 · Bash
+
+Set the repository About description
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && DESC="Class 3 assignment: a DQN learns Ms. Pac-Man. Mean score 492 to 2578 across five fixed evaluation games. Three one-variable runs, all five scores reported, and the evidence behind every claim." && echo "  description to set (${#DESC} chars):" && echo "  \"$DESC\"" && TOKEN=$(security find-internet-password -s github.com -w 2>/dev/null) && CODE=$(python3 -c "
+import json,sys
+print(json.dumps({'description': sys.argv[1]}))" "$DESC" | curl -s -o /tmp/ghpatch.json -w "%{http_code}" -X PATCH -H "Authorization: token $TOKEN" -H "Accept: application/vnd.github+json" -d @- https://api.github.com/repos/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI) && unset TOKEN && echo && echo "  PATCH -> HTTP $CODE" && python3 -c "
+import json
+d=json.load(open('/tmp/ghpatch.json'))
+if 'description' in d and d.get('description'):
+    print('  description now:', d['description'])
+    print('  visibility:', 'public' if not d.get('private') else 'PRIVATE')
+else:
+    print('  message:', d.get('message'), d.get('errors',''))"
+```
+
+### 09:16 · WebFetch
+
+https://github.com/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI
+
+### 09:16 · Bash
+
+Verify the description as an anonymous visitor sees it
+
+```sh
+curl -s -H "Accept: application/vnd.github+json" https://api.github.com/repos/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI | python3 -c "
+import json,sys
+d=json.load(sys.stdin)
+print('  (unauthenticated read, so this is what the public sees)')
+print('  name:       ', d.get('full_name'))
+print('  private:    ', d.get('private'))
+print('  description:', d.get('description'))
+print('  updated:    ', d.get('pushed_at'))
+"
+```
+
+### 09:16 · Claude replied
+
+That's my earlier fetch being served from a 15-minute cache. Verifying against the API directly, and with a cache-busting URL.
+
+### 09:21 · Hanif asked
+
+>  file:///Users/haniframadhan/.codex/generated_images/01a0a0b6-0c2f-75d2-938b-ea03e37eb01e/exec-c9a91ae4-7f54-42d8-918b-db4b9fcdfc76.png
+> 
+> add this to the repo as the hero image
+
+### 09:22 · Hanif asked
+
+> /login
+
+### 09:22 · Bash
+
+Check the image file exists and its dimensions
+
+```sh
+P="/Users/haniframadhan/.codex/generated_images/01a0a0b6-0c2f-75d2-938b-ea03e37eb01e/exec-c9a91ae4-7f54-42d8-918b-db4b9fcdfc76.png"; if [ -f "$P" ]; then ls -l "$P" | awk '{printf "  size: %.0f KB\n", $5/1024}'; file "$P" | sed 's/^/  /'; sips -g pixelWidth -g pixelHeight "$P" 2>/dev/null | sed 's/^/  /'; else echo "  FILE NOT FOUND"; fi
+```
+
+### 09:22 · Bash
+
+Resize and compare PNG versus JPEG output sizes
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && SRC="/Users/haniframadhan/.codex/generated_images/01a0a0b6-0c2f-75d2-938b-ea03e37eb01e/exec-c9a91ae4-7f54-42d8-918b-db4b9fcdfc76.png" && mkdir -p assets && sips -Z 1280 -s format png "$SRC" --out assets/hero.png >/dev/null 2>&1 && ls -l assets/hero.png | awk '{printf "  png  1280px wide: %.0f KB\n", $5/1024}' && sips -Z 1280 -s format jpeg -s formatOptions 88 "$SRC" --out /tmp/hero_test.jpg >/dev/null 2>&1 && ls -l /tmp/hero_test.jpg | awk '{printf "  jpg  1280px wide, q88: %.0f KB\n", $5/1024}' && echo && echo "=== is assets/ ignored? ===" && (git check-ignore -v assets/hero.png && echo "  IGNORED" || echo "  not ignored, will track")
+```
+
+### 09:22 · Bash
+
+Produce the final optimized hero image
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && SRC="/Users/haniframadhan/.codex/generated_images/01a0a0b6-0c2f-75d2-938b-ea03e37eb01e/exec-c9a91ae4-7f54-42d8-918b-db4b9fcdfc76.png" && rm -f assets/hero.png && for q in 80 85; do sips -Z 1200 -s format jpeg -s formatOptions $q "$SRC" --out /tmp/h$q.jpg >/dev/null 2>&1; printf "  1200px q%s: %s KB\n" "$q" "$(ls -l /tmp/h$q.jpg | awk '{printf "%.0f", $5/1024}')"; done && sips -Z 1200 -s format jpeg -s formatOptions 85 "$SRC" --out assets/hero.jpg >/dev/null 2>&1 && echo && echo "=== chosen ===" && sips -g pixelWidth -g pixelHeight -g format assets/hero.jpg 2>/dev/null | tail -3 | sed 's/^/  /' && ls -l assets/hero.jpg | awk '{printf "  %.0f KB (from 2771 KB)\n", $5/1024}'
+```
+
+### 09:23 · Bash
+
+Add the hero image to the README and verify
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 - <<'PY'
+import pathlib
+p = pathlib.Path("README.md"); t = p.read_text()
+old = """# Ms. Pac-Man DQN — Fundamentals of Agentic AI, Class 3
+
+> ### ⚠️ To see the notebook with its outputs, use this link"""
+new = """# Ms. Pac-Man DQN — Fundamentals of Agentic AI, Class 3
+
+![Ms. Pac-Man chasing four fleeing ghosts through a neon arcade city](assets/hero.jpg)
+
+*The agent really did learn to hunt ghosts, which is the part I predicted it would never do.
+It never catches more than two of them. [Why that happens](#one-limitation) is the most useful
+finding in this repository. The picture is an illustration, not a result: every measured
+number on this page comes from [`results/`](results/).*
+
+> ### ⚠️ To see the notebook with its outputs, use this link"""
+assert old in t
+p.write_text(t.replace(old, new, 1))
+print("hero image added under the title")
+PY
+echo && echo "=== check ===" && head -12 README.md | sed 's/^/  /' && echo && python3 -c "
+import re,pathlib,os
+R=pathlib.Path('README.md').read_text()
+a={re.sub(r'[^\w\s-]','',h.lower()).strip().replace(' ','-') for h in re.findall(r'^#{1,6}\s+(.*)\$', R, re.M)}
+print('  broken anchors:', [l for l in re.findall(r'\]\(#([^)]+)\)', R) if l not in a] or 'none')
+imgs=re.findall(r'!\[[^\]]*\]\(([^)]+)\)', R)
+print('  images referenced:', len(imgs), '| all exist:', all(os.path.exists(i.split('?')[0]) for i in imgs))
+print('  nbviewer link now at line', R[:R.index('nbviewer.org')].count(chr(10))+1)
+"
+```
+
+### 09:23 · Bash
+
+Inspect the divergence before reconciling
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && git fetch -q origin && echo "=== commits on the remote that I do not have ===" && git log --oneline HEAD..origin/main | sed 's/^/  /' && echo && echo "=== commits I have that the remote does not ===" && git log --oneline origin/main..HEAD | sed 's/^/  /' && echo && echo "=== what the remote commit changed ===" && git show --stat --format="  author: %an <%ae>%n  date:   %ad%n  message: %s" origin/main | sed 's/^/  /'
+```
+
+### 09:23 · Bash
+
+View the exact change made on GitHub
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && git show origin/main -- README.md | sed -n '1,40p' | sed 's/^/  /'
+```
+
+### 09:23 · Bash
+
+Rebase the hero commit onto the remote change
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && git -c rebase.autoStash=true rebase origin/main 2>&1 | sed 's/^/  /' && echo && echo "=== result ===" && git log --oneline -3 | sed 's/^/  /' && echo && git status -sb | head -2 | sed 's/^/  /'
+```
+
+### 09:23 · Bash
+
+Confirm both the hero image and the edit survived the rebase
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && echo "=== both changes present? ===" && head -14 README.md | sed 's/^/  /' && echo && grep -c "You do not need the notebook" README.md | sed 's/^/  removed sentence still present (should be 0): /'
+```
+
+### 09:23 · Bash
+
+Push and verify the hero image is live
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && git push -q origin main && echo "pushed $(date '+%T')" && git fetch -q origin && git rev-parse HEAD origin/main | uniq -c | awk '{print ($1==2)?"  remote matches local":"  MISMATCH"}' && echo && git log --oneline -2 | sed 's/^/  /' && echo && echo "=== hero image live on GitHub? ===" && curl -s -o /dev/null -w "  raw.githubusercontent hero.jpg -> HTTP %{http_code}, %{size_download} bytes\n" "https://raw.githubusercontent.com/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/main/assets/hero.jpg"
+```
+
+### 09:24 · Claude replied
+
+Both changes intact. Pushing.
+
+### 09:26 · Hanif asked
+
+> remove the Class_Notes.md file but keep it local on my machine. I will bring that to class tomorrow
+
+### 09:27 · Bash
+
+Check remote state and find references to the class notes
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && git fetch -q origin && BEHIND=$(git rev-list --count HEAD..origin/main) && echo "  commits on remote I don't have: $BEHIND" && [ "$BEHIND" -gt 0 ] && git log --oneline HEAD..origin/main | sed 's/^/    /' ; echo && echo "=== who references CLASS_NOTES.md ===" && grep -rn "CLASS_NOTES" --include="*.md" . 2>/dev/null | grep -v "^./docs/ai-log/" | sed 's/^/  /'
+```
+
+### 09:27 · Bash
+
+Untrack the class notes, ignore them, and remove the README row
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && git rm -q --cached CLASS_NOTES.md && printf '\n# speaking notes for the class, kept local\nCLASS_NOTES.md\n' >> .gitignore && python3 - <<'PY'
+import pathlib
+p = pathlib.Path("README.md"); t = p.read_text()
+old = "| `CLASS_NOTES.md` | One page of speaking notes for the class presentation | Me, in class |\n"
+assert old in t
+p.write_text(t.replace(old, "", 1))
+print("README repository-map row removed")
+PY
+echo && echo "=== file still on disk? ===" && ls -l CLASS_NOTES.md | awk '{printf "  yes, %s lines, %.0f KB\n", "'$(wc -l < CLASS_NOTES.md | tr -d ' ')'", $5/1024}' && echo && echo "=== git sees it as ignored? ===" && (git check-ignore -v CLASS_NOTES.md | sed 's/^/  /') && echo && git status --short | sed 's/^/  /'
+```

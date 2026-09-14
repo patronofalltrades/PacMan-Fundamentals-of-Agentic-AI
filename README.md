@@ -162,7 +162,6 @@ Start with this page. It contains the complete explanation.
 |---|---|---|
 | `README.md` | This page. The full explanation and all results | Every reader |
 | `FINDINGS.md` | A longer analysis. It gives the evidence for each statement here | A reader who wants proof |
-| `CLASS_NOTES.md` | One page of speaking notes for the class presentation | Me, in class |
 | `pacman_dqn.ipynb` | The program, with the output of the real run. **[Read it here](https://nbviewer.org/github/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/blob/main/pacman_dqn.ipynb)** | A reader who wants the code |
 | `results/` | The measurements from run 1 | A reader who wants the raw data |
 | `results/demos/` | 307 short animations of the program playing | Every reader |
