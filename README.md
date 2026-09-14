@@ -137,6 +137,7 @@ Start with this page. It contains the complete explanation.
 | `results/demos/` | 307 short animations of the program playing | Every reader |
 | `pacman_dqn_rescaled.ipynb` | Run 2. The same program with one line changed, the reward rule | A reader who checks the experiment |
 | `pacman_dqn_explore.ipynb` | Run 3. The same program with one line changed, the exploration rate | A reader who checks the experiment |
+| `pacman_dqn_explore25.ipynb` | Run 4. The same program at an exploration rate of 0.25 | A reader who checks the experiment |
 | `results2/` | The measurements from run 2, and the tests that compare it with run 1 | A reader who wants the raw data |
 | `results3/` | The measurements from run 3, and the tests that compare it with run 1 | A reader who wants the raw data |
 | `scripts/` | Four small helper programs. Two control a run. Two measure a saved network | A reader who repeats the run |
@@ -152,6 +153,13 @@ output of the real run.
 **GitHub shows this file as an empty page.** The file is 14.6 MB, because it contains 307
 animations. The GitHub viewer cannot show a file of that size. The link above shows the same
 file correctly. Nothing was removed from the file.
+
+**The three experiment notebooks are stored without their output, and this is deliberate.**
+`pacman_dqn_rescaled.ipynb`, `pacman_dqn_explore.ipynb` and `pacman_dqn_explore25.ipynb` are
+46 KB each, so GitHub shows them normally. Each is the same program as `pacman_dqn.ipynb` with
+one line changed, and the code is the part a reader needs to check. The output of each run is
+published in `results2/` and `results3/`, and the executed copy of each notebook is kept beside
+its own run data in the local archive as `executed_notebook.ipynb`.
 
 ## What the program does, in plain words
 
