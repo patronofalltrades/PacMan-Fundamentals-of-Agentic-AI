@@ -21,7 +21,8 @@ print(f"device: {DEVICE}  eval seeds: {g['EVAL_SEEDS']}  "
       f"exploration: {g['EVAL_EXPLORATION']}  cap: {g['MAX_STEPS']}", flush=True)
 
 out = {}
-for label, path in [("run1_clip", sys.argv[1]), ("run2_sqrt", sys.argv[2])]:
+for arg in sys.argv[1:]:
+    label, path = arg.split("=", 1) if "=" in arg else (pathlib.Path(arg).parts[-2], arg)
     ck = torch.load(path, map_location="cpu", weights_only=True)
     model = DQN(ck["n_actions"]).to(DEVICE)
     model.load_state_dict(ck["model"])
@@ -32,7 +33,10 @@ for label, path in [("run1_clip", sys.argv[1]), ("run2_sqrt", sys.argv[2])]:
           f"mean {r['mean']:.0f}", flush=True)
 
 print()
-a, b = out["run1_clip"], out["run2_sqrt"]
-print(f"matched at episode {a['episode']}:  run1 {a['mean']:.0f}   run2 {b['mean']:.0f}   "
-      f"diff {b['mean'] - a['mean']:+.0f}")
+labels = list(out)
+a = out[labels[0]]
+for other in labels[1:]:
+    b = out[other]
+    print(f"matched at episode {a['episode']}:  {labels[0]} {a['mean']:.0f}   "
+          f"{other} {b['mean']:.0f}   diff {b['mean'] - a['mean']:+.0f}")
 json.dump(out, open("matched_eval.json", "w"), indent=2)

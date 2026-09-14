@@ -27,11 +27,22 @@ The test conditions were identical both times.
 The score increased by 2086 points. That is 5.2 times the first score. The program improved
 in all five test games. [The full table is below](#the-five-test-games).
 
-**A second run tested the change this page recommends, and the change did not work.** Run 2
-replaced reward clipping with a rule that keeps the rewards in order. It scored 2298. That is
-lower than 2578, but the difference is smaller than the spread across the five test games, so
-the correct statement is that run 2 shows no difference. The section
-[The second run](#the-second-run) gives the result and what it changes.
+**Two more runs each tested one idea, and neither idea worked.** That is the useful part of
+this repository.
+
+| Run | The one setting changed | Average | Ghosts eaten in the five test games |
+|---|---|---|---|
+| 1 | The first run | **2578** | 16 |
+| 2 | The reward rule kept the rewards in order | 2298 | 12 |
+| 3 | The exploration rate fell to 0.10 | 1748 | 5 |
+
+Run 2 shows no difference: 280 points, which is smaller than the spread across the five test
+games. Run 3 is a real difference: it is worse on all five games, and the two sets of scores
+overlap by 30 points.
+
+Together they moved the limitation from a claim about reward to a claim about experience. See
+[The second run](#the-second-run), [The third run](#the-third-run), and
+[One limitation](#one-limitation).
 
 ## Short answers
 
@@ -40,10 +51,10 @@ Each answer links to the full evidence.
 **Did the program learn to play?**
 Yes. The average score rose from 492 to 2578. That is 5.2 times better.
 
-**Did the second run beat it?**
-No. Run 2 scored 2298, against 2578. The difference is smaller than the spread across the five
-test games, so the honest answer is that it shows no difference. See
-[The second run](#the-second-run).
+**Did the later runs beat it?**
+No. Run 2 scored 2298 and run 3 scored 1748, against 2578. Run 2 shows no difference, because
+280 points is smaller than the spread across the five test games. Run 3 is a real difference,
+and it is worse. See [The second run](#the-second-run) and [The third run](#the-third-run).
 
 **Could that be luck?**
 No. All five test games improved. The change in the average, 2086, is about two times the
@@ -60,12 +71,12 @@ program learned to eat power pellets, in 100% of its late games. It eats ghosts.
 eats more than two.** See [What the agent learned that I did not expect](#what-the-agent-learned-that-i-did-not-expect).
 
 **Why does it stop at two ghosts?**
-I thought it was the reward rule, and I tested that. It is not. Under clipping each ghost is
-worth 1 to the program, and so is one small pellet, so walking across the maze for the last
-ghost pays what one nearby pellet pays. Run 2 corrected that price. The program still never
-ate a third ghost. The price was not the problem. The likely reason is that the program never
-reaches a third ghost, so it never receives that reward and cannot learn from it. See
-[The second run](#the-second-run).
+Because it almost never experiences a chain, so it cannot learn one. I first thought the
+reward rule was the cause, and I tested it twice. Run 2 corrected the price of a full chain,
+and the program still never ate a third ghost. Run 3 reduced the random movement, and the
+ghosts eaten fell from 16 to 5 while the power pellets eaten stayed at 20. A program learns
+only from what it has done. Random movement is what puts it beside an edible ghost the first
+time. See [One limitation](#one-limitation).
 
 **Did the prediction error fall during training?**
 No. It stayed level for the whole run, while the score more than doubled. A level error does
@@ -82,7 +93,8 @@ memory from 5000 to 50000 experiences, and turned off the popup windows. See
 
 **Which of your reasons is weakest?**
 The exploration rate of 0.15. I selected the value between the default and the value I first
-argued for, and I did not test it. It is now the subject of run 3.
+argued for, and I gave no measurement for it. Run 3 measured it. The midpoint I chose without
+evidence beat the value I had argued for, which is luck and not judgement.
 
 **What did you get wrong?**
 For run 1, three things, and all three were wrong in a good direction. I expected one of the
@@ -91,13 +103,16 @@ stayed level, and the opposite happened. I stated that the program would never c
 and it chases ghosts.
 
 For run 2, the main prediction. I predicted that a corrected reward rule would produce ghost
-chains. It produced none, and the average did not rise. See
+chains. It produced none, and the average did not rise.
+
+For run 3, all four parts. I predicted a higher score from less random movement. The score
+fell from 2578 to 1748, and the ghosts eaten fell from 16 to 5. See
 [What I expected, and what happened](#what-i-expected-and-what-happened).
 
 **What would you change next?**
-The exploration rate, from 0.15 to 0.10. I already changed the reward rule, in run 2, and it
-did not work. That result points at what the program tries, not at what it is paid. See
-[One next experiment](#one-next-experiment).
+Raise the exploration rate to 0.25, and count the ghosts rather than the score. I have
+measured 0.10 and 0.15, and the ghosts eaten rose from 5 to 16 between them. A third point
+tests whether that continues. See [One next experiment](#one-next-experiment).
 
 **What helped the most?**
 A restart of the computer. It had run for 30 days, and its memory store was 90% full. After
@@ -121,7 +136,9 @@ Start with this page. It contains the complete explanation.
 | `results/` | The measurements from run 1 | A reader who wants the raw data |
 | `results/demos/` | 307 short animations of the program playing | Every reader |
 | `pacman_dqn_rescaled.ipynb` | Run 2. The same program with one line changed, the reward rule | A reader who checks the experiment |
-| `results2/` | The measurements from run 2, and the two tests that compare it with run 1 | A reader who wants the raw data |
+| `pacman_dqn_explore.ipynb` | Run 3. The same program with one line changed, the exploration rate | A reader who checks the experiment |
+| `results2/` | The measurements from run 2, and the tests that compare it with run 1 | A reader who wants the raw data |
+| `results3/` | The measurements from run 3, and the tests that compare it with run 1 | A reader who wants the raw data |
 | `scripts/` | Four small helper programs. Two control a run. Two measure a saved network | A reader who repeats the run |
 | `requirements.txt` | The list of software the notebook needs | A reader who repeats the run |
 
@@ -347,6 +364,19 @@ repository at 00:48, twelve minutes before the run started at 01:00.
 The two correct items show that the change worked as designed. The two wrong items show that
 the change did not help the agent play.
 
+**For run 3 every part was wrong.** It was committed at 09:17, and the run started at 10:30.
+
+| I expected, for run 3 | What happened | |
+|---|---|---|
+| The average lands between 2600 and 3100 | 1748 | Wrong |
+| The difference is smaller than the spread, so no difference | The difference is real, and worse | Wrong |
+| At game 7,625, above 2302 | 1708 | Wrong |
+| Fewer games than 7,628, because better play means longer games | 7,659 | Wrong |
+
+The part I got right was the note on how the prediction could fail. I wrote that less
+exploration can lock the program into a routine it found early. That is what the measurements
+then showed.
+
 ## Results
 
 ### The five test games
@@ -546,16 +576,49 @@ seconds of almost every game.
 when the ghosts become edible, then by 200, then by 400. Two ghosts eaten, one after the
 other.
 
-**The agent never eats more than two.** [One limitation](#one-limitation) explains this.
+**The agent never eats more than two.** No agent in any of the three runs ever ate a third
+ghost. [One limitation](#one-limitation) explains why.
 
 ## One limitation
 
-**Reward clipping does not stop the agent from eating ghosts. It stops the agent from
-finishing the chain.**
+**The agent stops after one or two ghosts because it almost never experiences a chain, not
+because a chain is worth too little.**
 
-> **Run 2 tested this, and the test did not support it.** The reward rule was corrected, and
-> the agent still never ate a third ghost. The arithmetic below is still right. It is not the
-> reason the agent stops. See [The second run](#the-second-run).
+This statement is the third version. Each version was replaced by a measurement, and the two
+earlier versions are kept below, because the path is the useful part.
+
+| Version | The claim | What replaced it |
+|---|---|---|
+| Written before run 1, from the code | The agent will never eat a power pellet or chase a ghost | The gameplay. It does both |
+| Written after run 1, from the gameplay | Clipping makes a full chain worth the same as one pellet, so the agent does not finish the chain | Run 2. The price was corrected and the behaviour did not change |
+| **Now, from three runs** | **The agent never experiences a chain, so it cannot learn one. Random movement is what produces the first accidental ghost** | Not yet tested against a higher exploration rate. [The test is written down](#one-next-experiment) |
+
+**The evidence for the current version.** The reward the game paid was recorded at every
+decision of the five test games, for all three trained networks.
+
+| | Run 3 | Run 1 | Run 2 |
+|---|---|---|---|
+| Exploration | 0.10 | 0.15 | 0.15 |
+| Reward rule | clipping | clipping | square root |
+| Power pellets eaten | 20 | 20 | 19 |
+| **Ghosts eaten** | **5** | **16** | **12** |
+| Third or fourth ghost, ever | 0 | 0 | 0 |
+| Average of the five test games | 1748 | 2578 | 2298 |
+
+Every agent eats power pellets at the same rate. The behaviour that starts a chain does not
+change. What changes is what happens next, and it moves with the exploration rate, not with
+the reward rule.
+
+**A network learns only from what its memory holds.** Run 2 raised the price of an experience
+that the memory does not contain. A price cannot teach an experience that never happened. Run
+3 made those experiences rarer, and the ghost count fell with it.
+
+The reward rule sets the price. It does not make the agent walk to the shop.
+
+> **The arithmetic below is still correct, and it is kept.** Under clipping a full chain really
+> is worth less to the network than a line of pellets. That is a true fault, and it is what
+> sent me to run 2. It is not what stops the agent. See
+> [The second run](#the-second-run) and [The third run](#the-third-run).
 
 ### What the evidence shows
 
@@ -737,6 +800,7 @@ cannot teach anything, whatever size it is given.
 **The reward rule sets the price. It does not make the agent walk to the shop.**
 
 That points at how the agent chooses what to do, which is the exploration rate.
+[The third run](#the-third-run) tested it.
 
 ### What the method taught
 
@@ -758,32 +822,126 @@ agent, unless the rise is larger than the spread between those games.**
 
 Full method and numbers: [FINDINGS.md](FINDINGS.md), section 10.
 
-## One next experiment
+## The third run
 
-**Reduce the exploration rate from 0.15 to 0.10. Change that one setting only.**
+**Run 3 lowered the exploration rate from 0.15 to 0.10. The play became worse.**
 
-The rate is one constant after the warm-up:
+One line changed against run 1. The reward rule went back to clipping, so run 3 and run 1
+differ by one setting only.
 
 ```python
 epsilon = 1.0 if total_steps < WARMUP_STEPS else EXPLORATION
 ```
 
-At 0.15, about one decision in seven is random. The game also ignores one move in four. In this
-game a random move beside a ghost often ends a life. The agent is measured at 0.05, so it is
-trained in noisier conditions than it is tested in. Lowering the rate makes that difference
-smaller.
+The rate is one constant after the warm-up. At 0.15 about one decision in seven is random.
+At 0.10 it is one in ten.
 
-Run 2 showed why this is the right next setting. The agent stops before the third ghost even
-when the third ghost is priced correctly. That is a question about what the agent tries, not
-about what it is paid.
+### The result
 
-**How I would know I was wrong.** If the average does not rise above 2578, or if the payments
-of 800 and 1600 are still zero, then the exploration rate is not the limit either. The next
-things to examine are the length of training and the rule that updates the network.
+| | Exploration | 101 | 202 | 303 | 404 | 505 | Average |
+|---|---|---|---|---|---|---|---|
+| Before training | — | 350 | 500 | 320 | 800 | 490 | 492 |
+| Run 1 | 0.15 | 2790 | 2330 | 2610 | 3110 | 2050 | **2578** |
+| Run 2 | 0.15 | 1810 | 2020 | 2770 | 2260 | 2630 | 2298 |
+| Run 3 | **0.10** | 2080 | 1640 | 1530 | 1790 | 1700 | **1748** |
 
-**What I expect, written before the run.** The average rises above 2578 and lands between 2600
-and 3100. That rise is smaller than the spread, so it must again be reported as no evidence of
-a difference. The more sensitive test is the matched one at game 7,625, where run 1 scored 2302.
+### This result is real, and the second one was not
+
+I reported run 2 as no difference. Run 3 is different, and it passes the same test that this
+page used to call the first run's improvement real: every game moved the same way, and the two
+sets of scores do not overlap.
+
+| Test | Run 2 against run 1 | Run 3 against run 1 |
+|---|---|---|
+| Test games that got worse | 3 of 5 | **5 of 5** |
+| Overlap between the two sets of scores | large | **30 points** |
+| Games completed, against run 1's 7,628 | 9,269 | **7,659** |
+
+Run 3 played almost the same number of games as run 1, so the two runs are matched on
+experience as well as on time. Run 2 was not, and that took an extra test to correct.
+
+Tested again at game 7,625, run 1 scored 2302 and run 3 scored 1708. The two measurements
+agree.
+
+### What it explains
+
+| Payment | What it means | Run 1, 15% | Run 3, **10%** |
+|---|---|---|---|
+| 50 | A power pellet | 20 | 20 |
+| 200 | The first ghost | 12 | 5 |
+| 400 | The second ghost | 4 | **0** |
+| 800 | The third ghost | 0 | 0 |
+| | **Ghosts eaten in total** | **16** | **5** |
+
+Run 3 ate exactly as many power pellets as run 1. It ate less than a third of the ghosts, and
+it never ate a second ghost in any test game.
+
+**The power pellet habit survived. The ghost habit did not.** That is what points at
+encounters rather than price: random movement is what puts the agent beside an edible ghost
+by accident the first time, and the agent cannot learn from a reward it never receives.
+
+### One more sign
+
+| | Average of the last 500 training games | Average of the five test games | Change |
+|---|---|---|---|
+| Run 1, trained at 15% | 1978 | 2578 | **+600** |
+| Run 3, trained at 10% | 1885 | 1748 | **−137** |
+
+The two runs play about the same during training. When the random moves are removed for the
+test, run 1 gains 600 points and run 3 gains nothing. Run 3 found a narrower way to play that
+does not improve when it is allowed to follow its own plan.
+
+This is a sign and not a proof. The two columns are measured differently: one covers 500 games
+with a network that is still changing, the other covers five games with the finished network.
+
+### The prediction, and all four parts were wrong
+
+The prediction was committed at 09:17. The run started at 10:30.
+
+| I expected | What happened | |
+|---|---|---|
+| The average lands between 2600 and 3100 | 1748 | Wrong |
+| The difference is smaller than the spread, so it is no difference | The difference is larger. It is real | Wrong |
+| At game 7,625, above 2302 | 1708 | Wrong |
+| Fewer games than 7,628, because better play means longer games | 7,659 | Wrong |
+
+The note I wrote about how the prediction could fail was the part that was right: *less
+exploration can lock the agent into a routine it found early, so it never discovers the chains.*
+
+The last item is worth a note. It failed because its assumption failed. Fewer games would
+follow from better play, and the play was not better.
+
+Full method and numbers: [FINDINGS.md](FINDINGS.md), sections 11 and 12.
+
+## One next experiment
+
+**Raise the exploration rate from 0.15 to 0.25. Change that one setting only.**
+
+Three runs say the limit is how often the agent experiences a chain, and that random movement
+is what produces the first one. Two exploration rates have been measured, and the ghost count
+rose from 5 to 16 between them. A third rate above 0.15 tests whether that continues.
+
+**Judge it on the number of ghosts first, and on the score second.** These two can disagree,
+and the disagreement is the useful part.
+
+| Ghosts eaten | Score | What it means |
+|---|---|---|
+| More than 16 | Above 2578 | The explanation holds, and more exploration is also better play |
+| More than 16 | Below 2578 | The explanation holds. Random moves also walk the agent into ghosts that are not edible, and that cost is larger than the gain |
+| 16 or fewer | Either | The explanation is wrong. The exploration rate is not what limits the chain |
+
+The middle row is the one I expect, and it would still confirm the explanation. It would also
+be the first result in this repository that separates the mechanism from the score.
+
+**How I would know I was wrong.** If the ghost count does not rise at 0.25, the encounter
+explanation fails. The next things to examine would be the length of the run, because a chain
+may need more than six hours to appear, and the rule that updates the network, because a rare
+event must be replayed more often than a common one before it can be learned.
+
+**Why this is worth more than a better score.** The three runs so far changed a price and
+changed a rate, and neither produced a third ghost. A measurement that moves the ghost count
+on purpose would be the first direct control of the behaviour, and not another guess at a
+setting.
 
 ## How to repeat this run
 
@@ -814,7 +972,11 @@ wrote 307 of them. They are in a local archive at
 `~/Fundamentals of Agentic AI/pacman-dqn/pacman_runs/`.
 
 The `results/` folder in this repository holds the published evidence of run 1: the settings,
-the measurements, the chart, the animations, and the comparison. The `results2/` folder holds
-the same evidence for run 2, and two files that compare the runs directly:
-`matched_eval.json`, the test of both networks at game 7,625, and `reward_events.txt`, the
-count of what the game paid at every decision of the five test games.
+the measurements, the chart, the animations, and the comparison. The `results2/` and
+`results3/` folders hold the same evidence for runs 2 and 3, and two files each that compare
+the run with run 1 directly:
+
+| File | What it holds |
+|---|---|
+| `matched_eval.json` | Both networks tested at game 7,625, so the runs are compared at equal experience and not only at equal time |
+| `reward_events.txt` | The reward the game paid at every decision of the five test games. This is where the count of ghosts comes from |

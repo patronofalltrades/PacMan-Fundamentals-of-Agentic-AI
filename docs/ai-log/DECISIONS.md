@@ -384,3 +384,71 @@ about 5.5 GB and has written 344 MB so far. The three ZIP files in `pacman_runs/
 their run folders and hold 4.0 GB. They can be deleted to recover that space, and rebuilt
 from the folders. This was not done, because deleting is not reversible and Hanif did not
 ask for it.
+
+---
+
+## 2026-09-13 · Run 3 result. Every part of the prediction was wrong, and the limitation changed
+
+**Produced.** Run 3 finished at 16:30, status `interrupted`, 7,659 games and 6,083,408
+decisions at 282 decisions per second. The results are in `results3/`. The run folder is
+`pacman_runs/20260913_103052_091454`.
+
+**The result. Lowering the exploration rate made the play worse.**
+
+| | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|
+| Exploration | 0.15 | 0.15 | **0.10** |
+| Reward rule | clipping | square root | clipping |
+| Average after six hours | **2578** | 2298 | **1748** |
+| Games completed | 7,628 | 9,269 | 7,659 |
+| Ghosts eaten, five test games | 16 | 12 | **5** |
+| Power pellets eaten | 20 | 19 | 20 |
+
+**Decided: report run 3 as a real difference, and run 2 as no difference.** These two are
+reported differently on purpose, and the test is the one `FINDINGS.md` section 1 already used
+for run 1. Run 3 is worse on five of five seeds, and the two sets of five scores overlap by
+30 points. Run 2 was worse on three of five, and the sets overlap widely. Run 3 also completed
+7,659 games against run 1's 7,628, so the experience confound that run 2 needed a matched test
+to remove does not exist here. The matched test was still run, and it agrees: 1708 against
+2302.
+
+**Alternatives considered.** Calling both results noise, for consistency (rejected: it would
+be the same error in the opposite direction, and it would hide the one real between-run signal
+in the project); calling both real (rejected: run 2's difference is smaller than the spread,
+and the brief is explicit about that case); repeating run 3 to confirm (not selected: no time
+before the deadline, and the ghost count already gives a second, independent measurement that
+points the same way).
+
+**The limitation is now in its third version, and this one is about experience.**
+
+1. Before run 1, from the code: the agent will never eat a power pellet or chase a ghost.
+   Wrong. It does both.
+2. After run 1, from the gameplay: clipping makes a full chain worth the same as one pellet,
+   so the agent does not finish the chain. The arithmetic is correct, but run 2 corrected the
+   price and nothing changed.
+3. Now, from three runs: the agent almost never experiences a chain, so it cannot learn one.
+   Random movement is what produces the first accidental ghost.
+
+**The evidence for version 3 is the ghost count, not the score.** All three agents ate about
+the same number of power pellets: 20, 19, 20. The behaviour that starts a chain is identical.
+The ghosts eaten afterwards moved with the exploration rate and not with the reward rule:
+5 at 0.10, and 16 at 0.15. A network learns only from what its memory holds, so a price cannot
+teach an experience that never happened.
+
+**A second sign, recorded as a sign and not as proof.** Run 1 gains 600 points when the random
+moves are removed for the test, from 1978 to 2578. Run 3 loses 137, from 1885 to 1748. The two
+numbers are measured differently, so this supports the reading and does not establish it.
+
+**The next experiment is now the opposite direction.** Raise exploration from 0.15 to 0.25 and
+judge it on the count of ghosts first, and the score second. The likely outcome is more ghosts
+and a lower score, because random moves also walk the agent into ghosts that are not edible.
+That outcome would still confirm version 3, and it would be the first measurement in this
+project that moves the behaviour on purpose rather than guessing at a setting.
+
+**A correction to the tooling.** `scripts/matched_eval.py` had the labels `run1_clip` and
+`run2_sqrt` written into it, so it mislabelled the run 3 comparison on the first call. It now
+takes `LABEL=PATH` arguments. The run 2 file `results2/matched_eval.json` was checked and is
+unchanged, and still holds 1660.
+
+**Produced.** `results3/`, and the run 3 sections of `README.md` and `FINDINGS.md`
+(sections 11, 12 and 13).
