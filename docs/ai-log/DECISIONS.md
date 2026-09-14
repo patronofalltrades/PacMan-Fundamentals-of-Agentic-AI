@@ -522,3 +522,61 @@ more games, so it writes more checkpoints: perhaps 400 to 480, against run 3's 3
 archive that is about 7 GB. It fits. Check the figure before the run starts.
 
 **Produced.** `pacman_dqn_explore25.ipynb`.
+
+---
+
+2026-09-14 · Run 4 was made, and the encounter explanation failed its own test
+
+**The result.** Run 4 trained at exploration 0.25 from 00:00 to 06:00. It reached 9,188
+games and 6,933,064 decisions at 321 decisions per second. The average of the five test
+games was 1678.
+
+| Exploration | Ghosts eaten | Power pellets | Average | Spread |
+|---|---|---|---|---|
+| 0.10, run 3 | 5 | 20 | 1748 | 550 |
+| 0.15, run 1 | 16 | 20 | 2578 | 1060 |
+| 0.25, run 4 | 9 | 15 | 1678 | 1650 |
+
+**The prediction failed on the item that decided it.** I predicted the ghost count would
+rise above 16. It fell to 9. The pre-written test said: if the count does not rise at 0.25,
+the encounter explanation fails. It did not rise, so the explanation is wrong. Predictions 3
+and 4 held: no payment of 800, and more games than 7,628.
+
+**What the three rates show.** A peak at 0.15, not a line. Moving either way makes the agent
+worse at everything, and at 0.25 the power pellet habit weakened from 20 to 15, which no
+other run did. The ghost count tracks the score across all four runs, so it reads as a
+symptom of general skill and not as an independent cause.
+
+**Two cautions, both recorded.** Run 4 is worse than run 1 on five of five seeds and the
+matched test at game 7,625 is the widest gap yet, 1286 against 2302. But run 4 has the widest
+spread of any run, 1650, and sits 70 points from run 3. Runs 3 and 4 cannot be separated from
+each other. One run per setting cannot resolve the shape of the curve. It can only say that
+0.15 beat both ends.
+
+**Decided: submit three runs, and state the run 4 outcome rather than rewrite the work.**
+Hanif asked to keep three runs and submit, with the highest scoring run highlighted. Run 1 at
+2578 is now the headline of the README and the class notes. Run 4 was made after the write-up
+existed, so rewriting every section around a fourth result costs time before a 16:00
+deadline and gains little.
+
+**What was not acceptable was leaving the old claim standing.** The published README asserted
+the encounter explanation as the current limitation, and both documents carried a banner
+saying run 4 was scheduled and the result was not yet in. Both statements were false once the
+run finished. The banners are replaced by the measured outcome, the limitation table names
+run 4 as what refuted version 3, and `results4/` is published so the statement can be
+checked. Sections 1 to 13 are otherwise left as written.
+
+**Alternatives considered.** A full run 4 section in both documents (not selected: Hanif
+asked for three runs, and the outcome is stated in full without it); removing run 4 entirely
+(rejected: the README would then assert an explanation already measured to be false, and the
+scheduled banners would be untrue); keeping the banners and submitting unchanged (rejected
+for the same reason).
+
+**The automatic write-up did not happen, and the cause is mine.** When the first waiter was
+killed for memory, it was replaced with a plain background shell that writes a marker file. A
+plain shell cannot re-invoke the session, so the marker was written at 06:05 and nothing
+read it. The measurement chain worked exactly as designed. Only the wake-up was broken, and
+it had been described as working.
+
+**Produced.** `results4/`, and the corrections above in `README.md`, `FINDINGS.md` and
+`CLASS_NOTES.md`.

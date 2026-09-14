@@ -12,12 +12,15 @@ explanation of the agent from a guess about reward to a measured claim about exp
 
 ---
 
-## 1. The agent learned
+## 1. The agent learned — 492 to 2578
 
-| | Average of five test games |
-|---|---|
-| Before training | 492 |
-| After training | **2578** |
+**The headline number is 2578, from run 1: clipping, exploration 0.15, six hours.** That is
+the best of every run, and it is the result to lead with.
+
+| | 101 | 202 | 303 | 404 | 505 | **Average** |
+|---|---|---|---|---|---|---|
+| Before | 350 | 500 | 320 | 800 | 490 | 492 |
+| **After** | **2790** | **2330** | **2610** | **3110** | **2050** | **2578** |
 
 Same five seeds, same settings, before and after. All five games improved.
 Six hours. 7,628 games. 1.56 million corrections to the network.
@@ -129,6 +132,22 @@ changed one thing.
 **The middle row is what I expect.** It would confirm the mechanism while the score gets worse,
 and that is the point: it would be the first measurement in this project that moves the
 behaviour on purpose instead of guessing at a setting.
+
+### I ran it, and it failed
+
+| Exploration | Ghosts eaten | Power pellets | Average |
+|---|---|---|---|
+| 0.10 | 5 | 20 | 1748 |
+| **0.15** | **16** | **20** | **2578** |
+| 0.25 | 9 | 15 | 1678 |
+
+The ghost count fell instead of rising. That is the bottom row of my own table, so the
+encounter explanation is wrong. 0.15 is a peak, and moving either way makes the agent worse
+at everything — at 0.25 even the power pellet habit weakened.
+
+**If asked, say this:** the fact survives, the explanation does not. In four runs and twenty
+test games, no agent ever ate a third ghost. I have three explanations that were each
+measured and found wrong, which is further than one run and a guess.
 
 ---
 

@@ -16,16 +16,28 @@ The program is a Deep Q-Network, or DQN. The notebook comes from the class repos
 
 ## The result
 
+# 492 → 2578
+
+**The best run raised the average score of five test games from 492 to 2578. That is 5.2
+times the starting score, and every one of the five games improved.**
+
+That run is **run 1**: reward clipping, an exploration rate of 0.15, a learning rate of
+0.0001, and six hours of training. Its settings are the ones in
+[The settings I chose, and why](#the-settings-i-chose-and-why), and its numbers are the ones
+quoted everywhere on this page unless another run is named.
+
 The program played five test games before training, and the same five games after training.
 The test conditions were identical both times.
 
-| | Average score, five games |
-|---|---|
-| Before training | 492 |
-| After training | **2578** |
+| | Seed 101 | Seed 202 | Seed 303 | Seed 404 | Seed 505 | **Average** |
+|---|---|---|---|---|---|---|
+| Before training | 350 | 500 | 320 | 800 | 490 | 492 |
+| **After training** | **2790** | **2330** | **2610** | **3110** | **2050** | **2578** |
 
-The score increased by 2086 points. That is 5.2 times the first score. The program improved
-in all five test games. [The full table is below](#the-five-test-games).
+**It is not luck.** The gain of 2086 is about twice the distance between the five results,
+which is 1060. The worst game after training, 2050, beats the best game before training, 800.
+The two sets of results do not overlap at any point.
+[The full table is below](#the-five-test-games).
 
 **Two more runs each tested one idea, and neither idea worked.** That is the useful part of
 this repository.
@@ -599,7 +611,16 @@ earlier versions are kept below, because the path is the useful part.
 |---|---|---|
 | Written before run 1, from the code | The agent will never eat a power pellet or chase a ghost | The gameplay. It does both |
 | Written after run 1, from the gameplay | Clipping makes a full chain worth the same as one pellet, so the agent does not finish the chain | Run 2. The price was corrected and the behaviour did not change |
-| **Now, from three runs** | **The agent never experiences a chain, so it cannot learn one. Random movement is what produces the first accidental ghost** | Not yet tested against a higher exploration rate. [The test is written down](#one-next-experiment) |
+| From three runs | The agent never experiences a chain, so it cannot learn one. Random movement is what produces the first accidental ghost | **Run 4, at an exploration rate of 0.25. The ghost count fell from 16 to 9 instead of rising, which is the result this version predicted could not happen** |
+
+> **This version is also wrong, and the test that shows it was written before the run.**
+> Run 4 raised the exploration rate to 0.25 and the ghost count fell. Across the three rates
+> measured, the count is 5 at 0.10, 16 at 0.15 and 9 at 0.25. That is a peak, not a line.
+> Moving away from 0.15 in either direction makes the agent worse at everything, and at 0.25
+> the power pellet habit weakened as well, from 20 to 15. The ghost count therefore looks
+> like a symptom of how well the agent plays, and not an independent cause.
+> **What survives is the fact, not the explanation: in four runs and twenty test games, no
+> agent ever ate a third ghost.** The measurements are in `results4/`.
 
 **The evidence for the current version.** The reward the game paid was recorded at every
 decision of the five test games, for all three trained networks.
@@ -923,10 +944,12 @@ Full method and numbers: [FINDINGS.md](FINDINGS.md), sections 11 and 12.
 
 ## One next experiment
 
-> **This run is scheduled.** Run 4 trains from 00:00 to 06:00 on 14 September, at an
-> exploration rate of 0.25, with the reward rule left at clipping. The prediction below was
-> committed to this repository before the run started. If this line is still here, the result
-> is not yet in.
+> **This run was made, and it did not support the explanation.** Run 4 trained at an
+> exploration rate of 0.25 on 14 September. The ghost count did not rise. It fell from 16 to
+> 9, and the average score fell to 1678. By the test written below, that means the
+> explanation in [One limitation](#one-limitation) is wrong. The measurements are in
+> `results4/`. This page reports three runs, because run 4 was made after the work was
+> written up, and its result is stated here rather than rewritten through every section.
 
 **Raise the exploration rate from 0.15 to 0.25. Change that one setting only.**
 

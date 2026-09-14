@@ -1,0 +1,15 @@
+
+===== run4_clip_0.25  (episode 9188) =====
+scores: [2040, 1810, 2490, 1210, 840]   mean 1678
+ghost rewards paid, across all five games:
+   ghost 1    200 points :   7
+   ghost 2    400 points :   2
+   ghost 3    800 points :   0
+   ghost 4   1600 points :   0
+   power pellets (50)      :  15
+per game, the ghosts eaten in order:
+   seed 101: [200, 400, 200]
+   seed 202: [200, 200, 200]
+   seed 303: [400, 200]
+   seed 404: [200]
+   seed 505: none

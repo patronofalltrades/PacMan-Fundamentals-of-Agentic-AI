@@ -767,6 +767,11 @@ Two experiments now say so.
 
 ### The corrected statement
 
+> **Run 4 tested this and it failed.** Raising the exploration rate to 0.25 made the ghost
+> count fall, not rise. See the note at the head of
+> [section 13](#13-the-next-experiment-and-how-to-judge-it). The statement below is kept as
+> it was written, because the test it names is the test that refuted it.
+
 **The agent stops after one or two ghosts because it almost never experiences a chain, not
 because a chain is worth too little.**
 
@@ -818,10 +823,25 @@ That test is described in [section 13](#13-the-next-experiment-and-how-to-judge-
 
 ## 13. The next experiment, and how to judge it
 
-> **This run is scheduled.** Run 4 trains from 00:00 to 06:00 on 14 September at an
-> exploration rate of 0.25. The prediction was committed before the run started, and it names
-> the ghost count as the measure, not the score. Full prediction:
-> [`docs/ai-log/DECISIONS.md`](docs/ai-log/DECISIONS.md).
+> **This run was made, and the explanation failed its own test.** Run 4 trained at an
+> exploration rate of 0.25 on 14 September, and reached 9,188 games at 321 decisions per
+> second. The ghost count fell from 16 to 9, and the average of the five test games was 1678.
+> The test below says that means the encounter explanation of section 12 is wrong.
+>
+> | Exploration | Ghosts eaten | Power pellets | Average |
+> |---|---|---|---|
+> | 0.10 | 5 | 20 | 1748 |
+> | **0.15** | **16** | **20** | **2578** |
+> | 0.25 | 9 | 15 | 1678 |
+>
+> The relation is a peak at 0.15, not a rise. At 0.25 even the power pellet habit weakened.
+> The ghost count tracks how well the agent plays, so it is a symptom and not a cause.
+> Run 4 is also the widest spread of any run, 1650, and it sits 70 points from run 3, so the
+> two failed settings cannot be separated from each other.
+>
+> **Sections 1 to 13 report three runs and are left as they were written.** Run 4 was made
+> after them. Its measurements are in `results4/`, and the prediction it failed is in
+> [`docs/ai-log/DECISIONS.md`](docs/ai-log/DECISIONS.md), committed before it started.
 
 **Raise the exploration rate from 0.15 to 0.25. Change that one setting only.**
 
