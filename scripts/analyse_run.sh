@@ -2,7 +2,7 @@
 # Collect the evidence for one run, and measure it against run 1.
 #
 # Usage:  analyse_run.sh DEST RUN_DIR [LABEL]
-#   ./scripts/analyse_run.sh results4 pacman_runs/20260914_000000_x "run4_clip_0.25"
+#   ./scripts/analyse_run.sh results3 pacman_runs/20260913_103052_091454 "run3_clip_0.10"
 #
 # It copies the published evidence, counts the reward the game paid at every
 # decision of the five test games, and tests this run's network against run 1's

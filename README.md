@@ -151,7 +151,7 @@ Start with this page. It contains the complete explanation.
 | `pacman_dqn_explore.ipynb` | Run 3. The same program with one line changed, the exploration rate | A reader who checks the experiment |
 | `results2/` | The measurements from run 2, and the tests that compare it with run 1 | A reader who wants the raw data |
 | `results3/` | The measurements from run 3, and the tests that compare it with run 1 | A reader who wants the raw data |
-| `scripts/` | Four small helper programs. Two control a run. Two measure a saved network | A reader who repeats the run |
+| `scripts/` | 7 small helper programs. Three control a run, one quiets the machine before it, two measure a saved network | A reader who repeats the run |
 | `requirements.txt` | The list of software the notebook needs | A reader who repeats the run |
 
 ## Read the program and its results

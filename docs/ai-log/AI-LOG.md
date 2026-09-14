@@ -9075,3 +9075,81 @@ for f in sorted(set(re.findall(r'\`([\w./-]+\.(?:ipynb|json|csv|txt|png|md|sh|py
 print('  missing:', miss if miss else 'none')
 "
 ```
+
+### 09:07 · Bash
+
+Commit and push the three-run submission
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && S=/private/tmp/claude-501/-Users-haniframadhan-Fundamentals-of-Agentic-AI-pacman-dqn/470825af-da49-4a24-8763-bf63413a3952/scratchpad && printf '%s\n' \
+'Report three runs, lead with the best one, and add the lessons' \
+'' \
+'The submitted report covers three runs. The README and the class notes lead' \
+'with 492 to 2578 and name run 1 as the run that produced it: clipping,' \
+'exploration 0.15, six hours. The five seed scores sit beside the average with' \
+'the check that the two sets do not overlap.' \
+'' \
+'Version 3 of the limitation is stated as a hypothesis, not a result, with the' \
+'test that would refute it written beside it. Versions 1 and 2 also fitted the' \
+'evidence of their day, and three runs are three points.' \
+'' \
+'A Lessons learned section is added to both documents: a rising score is no more' \
+'evidence than a falling error; decide what counts as a difference before seeing' \
+'the number; match runs on experience and not only on time; count behaviour' \
+'rather than score; a price cannot teach an experience that never happened; and' \
+'publish the version that was wrong.' \
+'' \
+'The glossary pointed at baseline.json, which is not published. It now points at' \
+'the before block of results/comparison.json, which holds the same five scores.' \
+'' \
+'Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>' \
+'Claude-Session: https://claude.ai/code/session_01SWQXXSVSQin7WCtownHXsE' > "$S/msg5.txt" && git add -A && git -c commit.gpgsign=false commit -q -F "$S/msg5.txt" && git push -q origin main && echo "=== pushed $(date '+%T') ===" && git log --oneline -3 && echo && git fetch -q origin && git rev-parse HEAD origin/main | uniq -c | awk '{print ($1==2)?"remote matches local":"MISMATCH"}' && echo && echo "=== what the repository now contains ===" && git ls-files | grep -vE "^results/demos/" | sed 's/^/  /' && echo "  results/demos/  ($(git ls-files results/demos | wc -l | tr -d ' ') animations)"
+```
+
+### 09:07 · Bash
+
+Find run 4 traces in tracked scripts and docs
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && echo "=== run-4 traces in tracked files ===" && grep -rniE "run.?4|explore25" --include="*.sh" --include="*.py" --include="*.md" . 2>/dev/null | grep -v "^./docs/ai-log/" | grep -v "^./.git" | sed 's/^/  /' | head -20
+```
+
+### 09:07 · Bash
+
+Untrack the run 4 scripts and correct the README count
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && git rm -q --cached scripts/arm_run4.sh scripts/after_run4.sh && printf 'scripts/arm_run4.sh\nscripts/after_run4.sh\n' >> .gitignore && python3 - <<'PY'
+import pathlib, subprocess
+n = len(subprocess.run(['git','ls-files','scripts'],capture_output=True,text=True).stdout.split())
+p = pathlib.Path("README.md"); t = p.read_text()
+old = "| `scripts/` | Four small helper programs. Two control a run. Two measure a saved network | A reader who repeats the run |"
+new = f"| `scripts/` | {n} small helper programs. Three control a run, one quiets the machine before it, two measure a saved network | A reader who repeats the run |"
+assert old in t; p.write_text(t.replace(old, new, 1))
+print(f"README scripts row updated: {n} scripts tracked")
+PY
+echo && echo "=== tracked scripts ===" && git ls-files scripts | sed 's/^/  /' && echo && echo "=== run-4 traces left outside the decision log ===" && (grep -rniE "run.?4|explore25" --include="*.sh" --include="*.py" --include="*.md" . 2>/dev/null | grep -v "^./docs/ai-log/" | grep -v "^./.git" | sed 's/^/  /' || echo "  none")
+```
+
+### 09:07 · Bash
+
+Fix the script example and check whether the brief requires the AI log
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 - <<'PY'
+import pathlib
+p=pathlib.Path("scripts/analyse_run.sh"); t=p.read_text()
+old="#   ./scripts/analyse_run.sh results4 pacman_runs/20260914_000000_x \"run4_clip_0.25\""
+new="#   ./scripts/analyse_run.sh results3 pacman_runs/20260913_103052_091454 \"run3_clip_0.10\""
+assert old in t; p.write_text(t.replace(old,new,1)); print("analyse_run.sh example updated")
+PY
+echo && echo "=== does the brief require the AI log to be submitted? ===" && grep -niE "ai.?log|audit|prompt.*record|transparen|log" docs/BRIEF.md | head -12 | sed 's/^/  /'
+```
+
+### 09:07 · Bash
+
+Check what the brief requires in the submission
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && echo "=== what the brief asks to hand in ===" && grep -niE "submit|deliver|hand in|include|repository|README" docs/BRIEF.md | head -14 | sed 's/^/  /' && echo && echo "=== ai-log README, what it is for ===" && head -12 docs/ai-log/README.md | sed 's/^/  /'
+```
