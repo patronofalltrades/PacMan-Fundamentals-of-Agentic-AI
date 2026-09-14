@@ -818,6 +818,11 @@ That test is described in [section 13](#13-the-next-experiment-and-how-to-judge-
 
 ## 13. The next experiment, and how to judge it
 
+> **This run is scheduled.** Run 4 trains from 00:00 to 06:00 on 14 September at an
+> exploration rate of 0.25. The prediction was committed before the run started, and it names
+> the ghost count as the measure, not the score. Full prediction:
+> [`docs/ai-log/DECISIONS.md`](docs/ai-log/DECISIONS.md).
+
 **Raise the exploration rate from 0.15 to 0.25. Change that one setting only.**
 
 Section 12 says the limit is the number of chains the agent experiences, and that random

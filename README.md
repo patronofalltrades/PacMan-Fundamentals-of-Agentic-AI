@@ -915,6 +915,11 @@ Full method and numbers: [FINDINGS.md](FINDINGS.md), sections 11 and 12.
 
 ## One next experiment
 
+> **This run is scheduled.** Run 4 trains from 00:00 to 06:00 on 14 September, at an
+> exploration rate of 0.25, with the reward rule left at clipping. The prediction below was
+> committed to this repository before the run started. If this line is still here, the result
+> is not yet in.
+
 **Raise the exploration rate from 0.15 to 0.25. Change that one setting only.**
 
 Three runs say the limit is how often the agent experiences a chain, and that random movement
@@ -937,6 +942,15 @@ be the first result in this repository that separates the mechanism from the sco
 explanation fails. The next things to examine would be the length of the run, because a chain
 may need more than six hours to appear, and the rule that updates the network, because a rare
 event must be replayed more often than a common one before it can be learned.
+
+**What I expect, written before the run.** The ghost count rises above 16, to between 20 and
+30. The average score falls below 2578, to between 1800 and 2500. No payment of 800 appears,
+because random movement produces encounters and not sequences. More games are completed than
+run 1's 7,628, because more random deaths make games shorter.
+
+**The third item admits a limit in my own explanation.** If encounters were sufficient, more
+of them should eventually produce a chain. I predict they will not. That would mean the
+explanation accounts for the first and second ghost, and not for the absence of a third.
 
 **Why this is worth more than a better score.** The three runs so far changed a price and
 changed a rate, and neither produced a third ghost. A measurement that moves the ghost count
