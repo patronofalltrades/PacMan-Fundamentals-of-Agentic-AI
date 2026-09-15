@@ -197,6 +197,14 @@ the local archive as `executed_notebook.ipynb`.
 
 ## What the program does, in plain words
 
+**The three parts in one table.** Each row is explained below.
+
+| Part | What it is here |
+|---|---|
+| **Observation** | Four game screens together, in grey, 84 by 84 pixels each. Four are needed, because one picture cannot show movement |
+| **Action** | One of nine joystick moves: no move, up, down, left, right, and the four diagonals |
+| **Reward** | Game points. Pellets, power pellets, ghosts and fruit all pay. **The program does not learn from the size of the payment**, and [that is the limitation](#one-limitation) |
+
 ### One cycle, from picture to move
 
 ```mermaid
@@ -225,8 +233,8 @@ pictures show movement.
 
 ### What it can do
 
-The program selects one of nine moves. The moves are: no move, up, down, left, right, and
-the four diagonal moves.
+The program selects one of nine joystick moves. The moves are: no move, up, down, left,
+right, and the four diagonal moves.
 
 One move in four does not obey the program. The game repeats the previous move instead. This
 is a setting of the game. It makes the game less predictable.

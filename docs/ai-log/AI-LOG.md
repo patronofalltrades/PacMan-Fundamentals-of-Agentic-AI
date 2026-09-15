@@ -9670,3 +9670,166 @@ print("README repository-map row removed")
 PY
 echo && echo "=== file still on disk? ===" && ls -l CLASS_NOTES.md | awk '{printf "  yes, %s lines, %.0f KB\n", "'$(wc -l < CLASS_NOTES.md | tr -d ' ')'", $5/1024}' && echo && echo "=== git sees it as ignored? ===" && (git check-ignore -v CLASS_NOTES.md | sed 's/^/  /') && echo && git status --short | sed 's/^/  /'
 ```
+
+### 09:27 · Bash
+
+Commit, push, and verify the notes are gone from the remote but present locally
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && S="/private/tmp/claude-501/-Users-haniframadhan-Fundamentals-of-Agentic-AI-pacman-dqn/470825af-da49-4a24-8763-bf63413a3952/scratchpad" && mkdir -p "$S" && printf '%s\n' \
+'Keep the speaking notes off the repository' \
+'' \
+'CLASS_NOTES.md is one page of notes to speak from in class, not evidence for' \
+'the assignment. It is no longer tracked, and it stays on the local machine.' \
+'The row that named it in the repository map is removed, so the map matches what' \
+'a reader can actually open.' \
+'' \
+'Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>' \
+'Claude-Session: https://claude.ai/code/session_01SWQXXSVSQin7WCtownHXsE' > "$S/msg10.txt" && git add -A && git -c commit.gpgsign=false commit -q -F "$S/msg10.txt" && git push -q origin main && echo "pushed $(date '+%T')" && echo && git fetch -q origin && git rev-parse HEAD origin/main | uniq -c | awk '{print ($1==2)?"  remote matches local":"  MISMATCH"}' && echo && echo "=== gone from the remote? ===" && curl -s -o /dev/null -w "  raw CLASS_NOTES.md -> HTTP %{http_code} (404 = removed)\n" "https://raw.githubusercontent.com/patronofalltrades/PacMan-Fundamentals-of-Agentic-AI/main/CLASS_NOTES.md" && echo && echo "=== still on your disk ===" && head -3 CLASS_NOTES.md | sed 's/^/  /' && echo && echo "=== links still valid ===" && python3 -c "
+import re,pathlib,os
+R=pathlib.Path('README.md').read_text()
+a={re.sub(r'[^\w\s-]','',h.lower()).strip().replace(' ','-') for h in re.findall(r'^#{1,6}\s+(.*)\$', R, re.M)}
+print('  broken anchors:', [l for l in re.findall(r'\]\(#([^)]+)\)', R) if l not in a] or 'none')
+import subprocess
+tr=set(subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split())
+bad=[f for f in re.findall(r'\]\(([\w./-]+\.(?:md|ipynb|json|csv|png|jpg|txt))\)', R) if '/' in f or f.endswith('.md') or f.endswith('.ipynb')]
+print('  README links to untracked files:', [f for f in bad if f not in tr and not f.startswith('results/demos')] or 'none')
+"
+```
+
+### 09:27 · Claude replied
+
+One real reference to fix — the repository map row. The ai-log hits are audit trail and stay untouched.
+
+### 20:01 · Hanif asked
+
+> check again against the rubric
+
+### 20:02 · Bash
+
+Full rubric sweep against the README and notebook
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 - <<'PY'
+import re, json, pathlib, subprocess, os
+R = pathlib.Path("README.md").read_text()
+tracked = set(subprocess.run(['git','ls-files'],capture_output=True,text=True).stdout.split())
+def chk(l,c,n=""): print(f"  {'ok  ' if c else 'MISS'} {l}" + (f"   <- {n}" if not c and n else ""))
+
+print("== WHAT YOU ARE SUBMITTING ==")
+nb=json.load(open('pacman_dqn.ipynb'))
+outs=sum(1 for c in nb['cells'] if c.get('outputs'))
+chk(f"executed notebook, outputs visible ({outs} cells)", outs>0 and 'pacman_dqn.ipynb' in tracked)
+hp={}
+for c in nb['cells']:
+    for l in c.get('source',[]):
+        for k in ('EXPLORATION','EPISODES','LEARNING_RATE'):
+            if l.strip().startswith(k+' ='): hp.setdefault(k,l.split('=')[1].split('#')[0].strip())
+chk(f"three hyperparameters in the notebook {hp}", len(hp)==3)
+emb=re.findall(r'!\[[^\]]*\]\(([^)]+\.gif)\)', R)
+chk("untrained GIF", any('0000' in g for g in emb))
+chk("best trained GIF", any('best' in g for g in emb))
+chk(f"intermediate GIFs ({len(emb)-2} of them)", len(emb)>=3)
+chk("training plot embedded", bool(re.search(r'!\[[^\]]*\]\([^)]*training_dashboard\.png', R)))
+chk("all five before and after scores", all(s in R for s in ('350','500','320','800','490','2790','2330','2610','3110','2050')))
+chk("observations / actions / rewards / limitation explained", all(x in R for x in ('four','joystick','game points','## One limitation')))
+
+print("\n== README REQUIREMENTS ==")
+chk("overview + how to open and run", '## What this is' in R and '## How to repeat this run' in R)
+chk("Colab route given", 'Colab' in R)
+chk("exploration + reason", '0.15' in R and 'Exploration' in R)
+chk("episode budget + reason", ('20,000' in R or '20000' in R))
+chk("learning rate + reason", '0.0001' in R)
+chk("expected before, observed after", '## What I expected, and what happened' in R)
+for lbl,pat in [("completed episodes",r'7,?628'),("decisions",r'6,?225,?108'),("learning updates",r'1,?556,?027'),
+                ("elapsed time",r'six hours|21,?59\d'),("hardware",r'M[1-4]|Apple|MPS')]:
+    chk(lbl+" reported", bool(re.search(pat,R,re.I)))
+chk("one next experiment, single setting named", '## One next experiment' in R)
+
+print("\n== EVIDENCE REQUIRED IN THE README ==")
+for f in ('comparison.json','config.json','training.csv','training_summary.json'):
+    chk(f+" linked", bool(re.search(r'\]\([^)]*'+re.escape(f), R)))
+chk("notebook linked", bool(re.search(r'\]\([^)]*pacman_dqn\.ipynb', R)))
+chk("interrupted run identified", 'interrupted' in R.lower())
+chk("checkpoint location explained", 'pacman_runs' in R)
+chk("no .pt files in repo", not any(f.endswith('.pt') for f in tracked))
+
+print("\n== DEFINITION OF DONE ==")
+c=json.load(open('results/comparison.json')); s=json.load(open('results/training_summary.json'))
+chk(f"README mean matches comparison.json ({c['after']['mean']:.0f})", '2578' in R)
+chk(f"README episodes match summary ({s['completed_episodes']})", '7,628' in R)
+chk("baseline is untrained network", 'untrained network' in R.lower())
+chk("same settings before and after stated", 'identical both times' in R or 'unchanged' in R)
+PY
+```
+
+### 20:02 · Bash
+
+Identify which literal term is missing
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 -c "
+import pathlib,re
+R=pathlib.Path('README.md').read_text()
+for t in ('four','joystick','game points','## One limitation'):
+    print(f'  {\"ok  \" if t in R else \"MISS\"} literal: {t!r}')
+" && echo && echo "=== how the README actually explains actions ===" && grep -n -i -A3 "What it can do" README.md | head -14 | sed 's/^/  /' && echo && echo "=== and observations ===" && grep -n -i -A3 "What it sees" README.md | head -10 | sed 's/^/  /'
+```
+
+### 20:02 · Bash
+
+Read the observations and actions explanation in full
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && sed -n '217,245p' README.md | sed 's/^/  /'
+```
+
+### 20:02 · Bash
+
+Find the section opening for the plain-words explanation
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && grep -n "^## What the program does" README.md && sed -n '/^## What the program does/,/^### One cycle/p' README.md | head -8 | sed 's/^/  /'
+```
+
+### 20:02 · Bash
+
+Add the observation/action/reward mapping table
+
+```sh
+cd "/Users/haniframadhan/Fundamentals of Agentic AI/pacman-dqn" && python3 - <<'PY'
+import pathlib
+p = pathlib.Path("README.md"); t = p.read_text()
+
+old = """## What the program does, in plain words
+
+### One cycle, from picture to move"""
+new = """## What the program does, in plain words
+
+**The three parts in one table.** Each row is explained below.
+
+| Part | What it is here |
+|---|---|
+| **Observation** | Four game screens together, in grey, 84 by 84 pixels each. Four are needed, because one picture cannot show movement |
+| **Action** | One of nine joystick moves: no move, up, down, left, right, and the four diagonals |
+| **Reward** | Game points. Pellets, power pellets, ghosts and fruit all pay. **The program does not learn from the size of the payment**, and [that is the limitation](#one-limitation) |
+
+### One cycle, from picture to move"""
+assert old in t; t = t.replace(old, new, 1)
+
+old2 = """The program selects one of nine moves. The moves are: no move, up, down, left, right, and
+the four diagonal moves."""
+new2 = """The program selects one of nine joystick moves. The moves are: no move, up, down, left,
+right, and the four diagonal moves."""
+assert old2 in t; t = t.replace(old2, new2, 1)
+p.write_text(t); print("observation / action / reward mapping added")
+PY
+echo && python3 -c "
+import pathlib,re
+R=pathlib.Path('README.md').read_text()
+for t in ('four','joystick','game points','## One limitation'):
+    print(f'  {\"ok  \" if t in R else \"MISS\"} {t!r}')
+a={re.sub(r'[^\w\s-]','',h.lower()).strip().replace(' ','-') for h in re.findall(r'^#{1,6}\s+(.*)\$', R, re.M)}
+print('  broken anchors:', [l for l in re.findall(r'\]\(#([^)]+)\)', R) if l not in a] or 'none')
+"
+```
